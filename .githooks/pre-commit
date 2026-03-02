@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+python scripts/check_secrets.py
+status=$?
+if [ $status -ne 0 ]; then
+  exit $status
+fi
+exit 0
