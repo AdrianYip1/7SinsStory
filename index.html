@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7 Sins — Story Intelligence Board</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #070709;
+  --navbar: #0a0a0dee;
+  --surface: #0f0f13;
+  --surface2: #141418;
+  --surface3: #1a1a1f;
+  --border: #1e1e24;
+  --border2: #2a2a32;
+  --text: #e2e2e8;
+  --muted: #6b6b78;
+  --dim: #3a3a44;
+  --accent: #c9a84c;
+  --accent2: #e8c96d;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── NAVBAR ── */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: var(--navbar);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 54px;
+  padding: 0 24px;
+}
+
+.navbar-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-right: 28px;
+  flex-shrink: 0;
+}
+
+.brand-eyebrow {
+  font-size: 8px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.brand-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.brand-title em {
+  color: var(--accent);
+  font-style: normal;
+}
+
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.navbar-nav::-webkit-scrollbar { display: none; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  border-bottom: 2px solid transparent;
+  transition: all .12s;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+
+.nav-item.active {
+  color: var(--accent);
+  background: var(--surface2);
+  border-bottom-color: var(--accent);
+}
+
+.nav-icon {
+  width: 14px;
+  height: 14px;
+  opacity: .7;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-icon { opacity: 1; }
+
+.navbar-search {
+  position: relative;
+  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  width: 180px;
+  padding: 5px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.search-input:focus { border-color: var(--accent); width: 240px; }
+.search-input { transition: width .2s, border-color .15s; }
+.search-input::placeholder { color: var(--muted); }
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 280px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 200;
+  display: none;
+  box-shadow: 0 8px 32px #00000066;
+}
+
+.search-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-item:last-child { border-bottom: none; }
+.search-item:hover { background: var(--surface2); }
+.search-item-label { color: var(--text); font-size: 12px; }
+.search-item-meta { color: var(--muted); font-size: 10px; margin-top: 1px; }
+
+.navbar-stats {
+  display: flex;
+  gap: 16px;
+  margin-left: 20px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  padding-left: 20px;
+}
+
+.stat-pill {
+  text-align: center;
+  line-height: 1;
+}
+
+.stat-pill-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-pill-label {
+  font-size: 8px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-top: 2px;
+}
+
+/* ── MAIN / SCROLL LAYOUT ── */
+.main {
+  padding-top: 54px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.scroll-section {
+  padding: 48px 40px 0;
+  scroll-margin-top: 70px;
+}
+
+.scroll-section:last-child {
+  padding-bottom: 80px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  margin-bottom: 4px;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+
+.page-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+/* ── OVERVIEW BOX ── */
+.overview-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 26px;
+  margin-bottom: 28px;
+}
+
+.overview-card-label {
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.overview-card-text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+/* ── CORE FOCUS ── */
+.core-focus-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.core-focus-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.core-focus-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.core-focus-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* ── OUTLINE ROWS ── */
+.outline-rows { display: flex; flex-direction: column; gap: 0; }
+
+.outline-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: start;
+}
+
+.outline-row:last-child { border-bottom: none; }
+
+.outline-ch {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  padding-top: 1px;
+}
+
+.outline-summary {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ── CHAPTER GRID ── */
+.chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.ch-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+
+.ch-card:hover { border-color: var(--border2); }
+.ch-card.focused { border-color: var(--ch-color) !important; box-shadow: 0 0 0 1px var(--ch-color)20; }
+
+.ch-card-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 3px solid var(--ch-color);
+}
+
+.ch-sin-badge {
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.ch-title {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-meta {
+  font-size: 10px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.ch-chars {
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid var(--border);
+  min-height: 42px;
+  align-items: center;
+}
+
+.char-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .12s;
+}
+
+.char-pill:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
+
+.pill-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.arc-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+.no-data {
+  font-size: 11px;
+  color: var(--dim);
+  font-style: italic;
+}
+
+.ch-docs {
+  padding: 6px 0 4px;
+}
+
+.doc-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px;
+  cursor: pointer;
+  gap: 8px;
+  transition: background .1s;
+}
+
+.doc-row:hover { background: var(--surface2); }
+.doc-row:hover .doc-row-name { color: var(--accent); }
+
+.doc-row-name {
+  flex: 1;
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-has-content { color: var(--accent); font-size: 8px; flex-shrink: 0; }
+
+.doc-status {
+  font-size: 10px;
+  color: var(--dim);
+  flex-shrink: 0;
+}
+
+/* Chapter focus panel */
+.chapter-focus-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  min-height: 60px;
+  transition: all .15s;
+}
+
+.cfp-hint { color: var(--dim); font-size: 12px; font-style: italic; }
+.cfp-sin { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 4px; }
+.cfp-summary { font-size: 13px; line-height: 1.6; color: var(--muted); }
+.cfp-chars { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+/* ── CHARACTERS ── */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.char-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .12s;
+}
+
+.char-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+.char-card-top {
+  padding: 14px 14px 10px;
+  border-top: 3px solid transparent;
+}
+
+.char-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.char-card-role {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-weight: 600;
+}
+
+.char-card-bottom {
+  padding: 8px 14px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.char-card-chapter {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.char-arc-pill {
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 600;
+}
+
+/* ── PLOTLINES ── */
+.pl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.pl-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .12s;
+}
+
+.pl-card:hover { border-color: var(--border2); }
+
+.pl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pl-title { font-size: 13px; font-weight: 600; }
+.pl-count { font-size: 11px; color: var(--muted); }
+.pl-beats { padding: 8px 14px 10px; display: flex; flex-direction: column; gap: 5px; }
+
+.pl-beat {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.pl-cat {
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+.pl-names { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── MASTER TIMELINE ── */
+.tl-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.tl-legend-item, .tl-legend-era {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tl-type-badge {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.tl-main    { background: #3b82f620; color: #60a5fa; border: 1px solid #3b82f640; }
+.tl-sideplot { background: #a855f720; color: #c084fc; border: 1px solid #a855f740; }
+.tl-trauma  { background: #ef444420; color: #f87171; border: 1px solid #ef444440; }
+.tl-flashback { background: #f59e0b20; color: #fbbf24; border: 1px solid #f59e0b40; }
+.tl-offscreen { background: #6b728020; color: #9ca3af; border: 1px solid #6b728040; }
+
+.tl-era-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tl-era-past { background: var(--dim); }
+.tl-era-present { background: var(--accent); }
+
+.tl-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 24px;
+  font-style: italic;
+}
+
+.tl-master {
+  position: relative;
+  padding-left: 32px;
+}
+
+.tl-master::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--dim), var(--border2), var(--dim));
+}
+
+.tl-era-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 20px -32px;
+  padding-left: 32px;
+}
+
+.tl-era-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.tl-era-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.tl-event {
+  position: relative;
+  margin-bottom: 16px;
+  padding: 14px 16px 14px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.tl-event:hover { background: var(--surface2); border-color: var(--border2); }
+
+.tl-event.tl-ev-high, .tl-event.tl-ev-critical {
+  border-left-width: 3px;
+}
+
+.tl-event::before {
+  content: '';
+  position: absolute;
+  left: -27px;
+  top: 18px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  z-index: 1;
+}
+
+.tl-event.tl-ev-main::before    { background: #60a5fa; }
+.tl-event.tl-ev-sideplot::before { background: #c084fc; }
+.tl-event.tl-ev-trauma::before  { background: #f87171; }
+.tl-event.tl-ev-flashback::before { background: #fbbf24; }
+.tl-event.tl-ev-offscreen::before { background: var(--dim); }
+
+.tl-event-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.tl-event-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.tl-event-badges {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.tl-chapter-badge {
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tl-event-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.tl-event-chars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tl-char-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .12s;
+}
+
+.tl-char-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+/* weight-based left border colors */
+.tl-ev-critical { border-left-color: #ef4444; }
+.tl-ev-high     { border-left-color: var(--accent); }
+
+/* keep old pl/tl CSS for any fallback usage */
+
+/* ── GAPS & RECS ── */
+.gaps-list, .recs-list { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+
+.gap-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.gap-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.gap-sev {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+}
+
+.gap-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gap-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.rec-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  gap: 18px;
+}
+
+.rec-num {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 36px;
+}
+
+.rec-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.rec-detail {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ── RELATIONSHIPS ── */
+.rel-explorer {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.rel-char-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  max-height: 70vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rel-char-item {
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 11px;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+
+.rel-char-item:hover { border-color: var(--border2); background: var(--surface2); }
+.rel-char-item.active { border-color: var(--accent); background: var(--surface2); }
+
+.rel-char-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.rel-char-meta { font-size: 11px; color: var(--muted); line-height: 1.45; }
+
+.rel-info {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  min-height: 320px;
+}
+
+.rel-info-empty {
+  color: var(--dim);
+  font-style: italic;
+  font-size: 12px;
+  padding-top: 8px;
+}
+
+.rel-info-head {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rel-info-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.rel-info-meta { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+.rel-reasoning {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.rel-reasoning-label {
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 5px;
+}
+
+.rel-reasoning-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.rel-links {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.rel-link-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.rel-link-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.rel-dir {
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.rel-other {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.rel-other:hover { color: var(--accent2); }
+
+.rel-link-body {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* ── MODALS ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 28px;
+  max-width: 520px;
+  width: calc(100% - 40px);
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-wide {
+  max-width: 720px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  width: 28px; height: 28px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .12s;
+}
+
+.modal-close:hover { color: var(--text); border-color: var(--border2); }
+
+.modal-tag {
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.modal-name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  margin-bottom: 4px;
+}
+
+.modal-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.modal-verdict {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text);
+  padding: 14px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.modal-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 980px) {
+  .rel-explorer { grid-template-columns: 1fr; }
+  .rel-char-list { max-height: 320px; }
+  .core-focus-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .modal-grid-2 { grid-template-columns: 1fr; }
+}
+
+.modal-section {
+  margin-bottom: 14px;
+}
+
+.modal-section-label {
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 5px;
+}
+
+.modal-section-value {
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
+.modal-warning-card {
+  background: #ef444410;
+  border: 1px solid #ef444428;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.modal-accent-card {
+  background: var(--accent)10;
+  border: 1px solid var(--accent)28;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.arc-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.nova-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ch-card { cursor: pointer; }
+.ch-card:hover { border-color: var(--ch-color) !important; }
+
+/* ── LEGEND ── */
+.legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+
+.section-label {
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 24px 0 12px;
+}
+
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="brand-eyebrow">Studio Agent</div>
+    <div class="brand-title">7 <em>Sins</em></div>
+  </div>
+
+  <div class="navbar-nav">
+    <div class="nav-item active" data-section="outline">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Outline
+    </div>
+    <div class="nav-item" data-section="focus">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 2"/></svg>
+      Core Focus
+    </div>
+    <div class="nav-item" data-section="board">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+      Overview
+    </div>
+    <div class="nav-item" data-section="plotlines">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h3l2-5 3 10 2-5h2"/></svg>
+      Plotlines
+    </div>
+    <div class="nav-item" data-section="relationships">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="8" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="12" cy="12" r="2"/><path d="M6 8h2l2-3M6 8h2l2 3"/></svg>
+      Relationships
+    </div>
+    <div class="nav-item" data-section="missing">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M8 12v2"/><circle cx="8" cy="8" r="6"/></svg>
+      Missing Pieces
+    </div>
+  </div>
+
+  <div class="navbar-search">
+    <input id="search-input" class="search-input" type="text" placeholder="Search…" autocomplete="off" oninput="doSearch(this.value)" />
+    <div id="search-dropdown" class="search-dropdown"></div>
+  </div>
+
+  <div class="navbar-stats">
+    <div class="stat-pill">
+      <div class="stat-pill-val">8</div>
+      <div class="stat-pill-label">Chapters</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-val">7</div>
+      <div class="stat-pill-label">Characters</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-val">2</div>
+      <div class="stat-pill-label">Connections</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-val">2</div>
+      <div class="stat-pill-label">Gaps</div>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <section id="section-outline" class="scroll-section">
+    <div class="section-title">Story Outline</div>
+    <div class="page-sub">High-level narrative arc and chapter breakdown · March 01, 2026 at 09:58 PM</div>
+    <div class="overview-card">
+      <div class="overview-card-label">Narrative Overview</div>
+      <div class="overview-card-text">The narrative of '7 Sins' centers on a main character who has had their traumatic memories erased by an entity. They embark on a journey to confront and defeat the seven deadly sins, each represented by a unique boss, to uncover the truth about their past and the sins that have affected those around them. The emotional tone is a mix of tension, introspection, and a quest for redemption.</div>
+    </div>
+    <div class="overview-card">
+      <div class="overview-card-label">Full Story Outline</div>
+      <div class="overview-card-text">The core theme of '7 Sins' revolves around the idea that confronting and understanding one's past traumas is crucial for personal growth and moving forward. The main character, after making a deal with the entity to erase their memories, must battle through various sins embodied by powerful bosses to help those affected by these sins. Each chapter focuses on a different sin, with the main character learning more about themselves and the impact of their actions as they progress. The overarching arc follows the main character's journey from a state of blissful ignorance to a reluctant acceptance of their past and the realization that confronting pain is necessary for true healing.</div>
+    </div>
+    <div class="section-label">Chapters at a Glance</div>
+    <div class="outline-rows"><div class="outline-row" data-action="show-chapter" data-idx="0" style="cursor:pointer"><div class="outline-ch" style="color:#dc2626">Wrath</div><div class="outline-summary">This chapter has potential but lacks depth in character development and narrative clarity.</div></div><div class="outline-row" data-action="show-chapter" data-idx="1" style="cursor:pointer"><div class="outline-ch" style="color:#ca8a04">Greed</div><div class="outline-summary">This chapter has potential but lacks concrete details and character interactions.</div></div><div class="outline-row" data-action="show-chapter" data-idx="2" style="cursor:pointer"><div class="outline-ch" style="color:#7c3aed">Pride</div><div class="outline-summary">This chapter is working well in exploring the theme of pride through character dynamics and narrative structure.</div></div><div class="outline-row" data-action="show-chapter" data-idx="3" style="cursor:pointer"><div class="outline-ch" style="color:#ea580c">Gluttony</div><div class="outline-summary">This chapter has potential but lacks clarity in its narrative direction.</div></div><div class="outline-row" data-action="show-chapter" data-idx="4" style="cursor:pointer"><div class="outline-ch" style="color:#2563eb">Sloth</div><div class="outline-summary">This chapter needs more depth and context to fully utilize the theme of Sloth.</div></div><div class="outline-row" data-action="show-chapter" data-idx="5" style="cursor:pointer"><div class="outline-ch" style="color:#db2777">Lust</div><div class="outline-summary">This chapter has potential but needs more depth in character development and emotional stakes.</div></div><div class="outline-row" data-action="show-chapter" data-idx="6" style="cursor:pointer"><div class="outline-ch" style="color:#16a34a">Envy</div><div class="outline-summary">This chapter is not yet working as it lacks foundational elements.</div></div><div class="outline-row" data-action="show-chapter" data-idx="7" style="cursor:pointer"><div class="outline-ch" style="color:#475569">The Entity</div><div class="outline-summary">This chapter has potential but needs more depth and clarity in its execution.</div></div></div>
+  </section>
+
+  <section id="section-focus" class="scroll-section">
+    <div class="section-title">Main Character &amp; Story Theme</div>
+    <div class="page-sub">Focused read on protagonist strength and thematic clarity</div>
+    <div class="core-focus-grid">
+      <div class="core-focus-card">
+        <div class="overview-card-label">Main Character</div>
+        <div class="core-focus-title">You (Unnamed Protagonist)</div>
+        <div class="core-focus-text">As the unnamed protagonist of '7 Sins', you occupy a unique narrative role as a self-insert character, which inherently ties your journey to the player's own experiences and interpretations. This design choice allows for a deeply personal connection to the story, as players confront their own potential traumas and sins through your character. Your emotional throughline is shaped by a past filled with unresolved guilt and anger, stemming from a traumatic event that you have forgotten due to an external entity's intervention. This sets the stage for a journey of self-discovery, where you must navigate the complexities of confronting past traumas, battling sin-based entities, and learning that the path to healing is not always straightforward or guaranteed to bring happiness. Your ties to the core theme are evident in your belief that confronting pain and trauma is essential for moving forward, contrasting with the Entity's philosophy of erasing painful memories to alleviate suffering.
+
+Strongest Element: The strength of your character lies in the relatability and depth of your emotional journey. As a self-insert protagonist, you embody the player's own struggles with trauma and the desire for closure, making your experiences and growth resonate on a personal level. This deep emotional throughline not only drives the narrative forward but also engages the player in a meaningful way, as they see their own challenges and aspirations reflected in your character's story.
+Main Risk: The main narrative risk with your character as a self-insert protagonist is the potential for the story to become too personal or insular, potentially alienating players who do not share similar experiences or perspectives. There's also a risk that the emotional weight of your journey could lead to a sense of overwhelm or fatigue, especially if the story consistently presents darker and less certain resolutions to the conflicts you face.
+Immediate Fix: To improve the integration of the self-insert protagonist, consider introducing more diverse perspectives and experiences through the friend group and side characters. By ensuring that these characters have their own arcs and viewpoints, the narrative can explore a wider range of responses to trauma and sin, providing a more balanced and enriching story experience. This approach can help mitigate the risk of the story feeling too narrowly focused on your personal journey, while still allowing for the deep emotional engagement that is central to your character's design.</div>
+      </div>
+      <div class="core-focus-card">
+        <div class="overview-card-label">Story Theme</div>
+        <div class="core-focus-title">Thematic Direction</div>
+        <div class="core-focus-text">The core theme of '7 Sins' revolves around the idea that confronting and understanding one's past traumas is crucial for personal growth and moving forward.
+
+Sin Arc Coverage: Wrath, Greed, Pride, Gluttony, Sloth, Lust, Envy, The Entity</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="section-board" class="scroll-section">
+    <div class="section-title">Chapter Overview</div>
+    <div class="page-sub">Click a chapter card to explore details</div>
+
+    <div class="chapter-focus-panel" id="focus-panel">
+      <div class="cfp-hint">Click a chapter to see its summary and characters here</div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>Developed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#facc15"></div>Partially Developed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>Undeveloped</div>
+      <div class="legend-item" style="margin-left:8px"><span style="color:var(--muted)">● = has page content</span></div>
+    </div>
+
+    <div class="chapter-grid"><div class="ch-card" id="chapter-0" style="--ch-color:#dc2626" data-action="show-chapter" data-idx="0">
+          <div class="ch-card-header">
+            <div class="ch-sin-badge" style="background:#dc262618;color:#dc2626;border:1px solid #dc262630">Wrath</div>
+            <div class="ch-title">1 - Wrath</div>
+            <div class="ch-meta">3 docs</div>
+          </div>
+          <div class="ch-chars"><button class="char-pill" data-action="show-char" data-name="Edward Daniels" style="border-color:#dc262622"><span class="pill-dot" style="background:#dc2626"></span>Edward Daniels<span class="arc-dot" style="background:#facc15"></span></button><button class="char-pill" data-action="show-char" data-name="Sarah Daniels" style="border-color:#16a34a22"><span class="pill-dot" style="background:#16a34a"></span>Sarah Daniels<span class="arc-dot" style="background:#facc15"></span></button><button class="char-pill" data-action="show-char" data-name="Rachel Daniels" style="border-color:#47556922"><span class="pill-dot" style="background:#475569"></span>Rachel Daniels<span class="arc-dot" style="background:#f87171"></span></button><button class="char-pill" data-action="show-char" data-name="Sarah Daniels" style="border-color:#16a34a22"><span class="pill-dot" style="background:#16a34a"></span>Sarah Daniels<span class="arc-dot" style="background:#facc15"></span></button><button class="char-pill" data-action="show-char" data-name="Rachel Daniels" style="border-color:#47556922"><span class="pill-dot" style="background:#475569"></span>Rachel Daniels<span class="arc-dot" style="background:#f87171"></span></button></div>
+          <div class="ch-docs"><div class="doc-row" data-action="show-page" data-name="Wrath: Character Design"><span class="doc-row-name">Wrath: Character Design</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div><div class="doc-row" data-action="show-page" data-name="Wrath (Edward Daniels) : Character Design"><span class="doc-row-name">Wrath (Edward Daniels) : Character Design</span><span class='doc-has-content'>●</span><span class="doc-status">Starting</span></div><div class="doc-row" data-action="show-page" data-name="Rachel Daniels: Character Design"><span class="doc-row-name">Rachel Daniels: Character Design</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div></div>
+        </div><div class="ch-card" id="chapter-1" style="--ch-color:#ca8a04" data-action="show-chapter" data-idx="1">
+          <div class="ch-card-header">
+            <div class="ch-sin-badge" style="background:#ca8a0418;color:#ca8a04;border:1px solid #ca8a0430">Greed</div>
+            <div class="ch-title">2 - Greed</div>
+            <div class="ch-meta">1 docs</div>
+          </div>
+          <div class="ch-chars"><span class='no-data'>No characters mapped yet</span></div>
+          <div class="ch-docs"><div class="doc-row" data-action="show-page" data-name="Greed: Character Design"><span class="doc-row-name">Greed: Character Design</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div></div>
+        </div><div class="ch-card" id="chapter-2" style="--ch-color:#7c3aed" data-action="show-chapter" data-idx="2">
+          <div class="ch-card-header">
+            <div class="ch-sin-badge" style="background:#7c3aed18;color:#7c3aed;border:1px solid #7c3aed30">Pride</div>
+            <div class="ch-title">3 - Pride</div>
+            <div class="ch-meta">5 docs</div>
+          </div>
+          <div class="ch-chars"><button class="char-pill" data-action="show-char" data-name="Alan" style="border-color:#dc262622"><span class="pill-dot" style="background:#dc2626"></span>Alan<span class="arc-dot" style="background:#facc15"></span></button><button class="char-pill" data-action="show-char" data-name="Sarah Daniels" style="border-color:#16a34a22"><span class="pill-dot" style="background:#16a34a"></span>Sarah Daniels<span class="arc-dot" style="background:#facc15"></span></button><button class="char-pill" data-action="show-char" data-name="Alice" style="border-color:#47556922"><span class="pill-dot" style="background:#475569"></span>Alice<span class="arc-dot" style="background:#f87171"></span></button><button class="char-pill" data-action="show-char" data-name="Sarah Daniels" style="border-color:#16a34a22"><span class="pill-dot" style="background:#16a34a"></span>Sarah Daniels<span class="arc-dot" style="background:#f87171"></span></button><button class="char-pill" data-action="show-char" data-name="Alice" style="border-color:#47556922"><span class="pill-dot" style="background:#475569"></span>Alice<span class="arc-dot" style="background:#f87171"></span></button></div>
+          <div class="ch-docs"><div class="doc-row" data-action="show-page" data-name="Sarah Daniels: Character Design"><span class="doc-row-name">Sarah Daniels: Character Design</span><span class='doc-has-content'>●</span><span class="doc-status">Partially completed</span></div><div class="doc-row" data-action="show-page" data-name="Pride (Alan) : Character Design"><span class="doc-row-name">Pride (Alan) : Character Design</span><span class='doc-has-content'>●</span><span class="doc-status">Partially completed</span></div><div class="doc-row" data-action="show-page" data-name="Pride (Alan) : Props & Tools"><span class="doc-row-name">Pride (Alan) : Props & Tools</span><span class='doc-has-content'>●</span><span class="doc-status">Partially completed</span></div><div class="doc-row" data-action="show-page" data-name="Pride (Alan) : Storyline Progression"><span class="doc-row-name">Pride (Alan) : Storyline Progression</span><span class='doc-has-content'>●</span><span class="doc-status">Partially completed</span></div><div class="doc-row" data-action="show-page" data-name="Alice: Character Design"><span class="doc-row-name">Alice: Character Design</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div></div>
+        </div><div class="ch-card" id="chapter-3" style="--ch-color:#ea580c" data-action="show-chapter" data-idx="3">
+          <div class="ch-card-header">
+            <div class="ch-sin-badge" style="background:#ea580c18;color:#ea580c;border:1px solid #ea580c30">Gluttony</div>
+            <div class="ch-title">4 - Gluttony</div>
+            <div class="ch-meta">1 docs</div>
+          </div>
+          <div class="ch-chars"><span class='no-data'>No characters mapped yet</span></div>
+          <div class="ch-docs"><div class="doc-row" data-action="show-page" data-name="Gluttony"><span class="doc-row-name">Gluttony</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div></div>
+        </div><div class="ch-card" id="chapter-4" style="--ch-color:#2563eb" data-action="show-chapter" data-idx="4">
+          <div class="ch-card-header">
+            <div class="ch-sin-badge" style="background:#2563eb18;color:#2563eb;border:1px solid #2563eb30">Sloth</div>
+            <div class="ch-title">5 - Sloth</div>
+            <div class="ch-meta">1 docs</div>
+          </div>
+          <div class="ch-chars"><span class='no-data'>No characters mapped yet</span></div>
+          <div class="ch-docs"><div class="doc-row" data-action="show-page" data-name="Sloth"><span class="doc-row-name">Sloth</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div></div>
+        </div><div class="ch-card" id="chapter-5" style="--ch-color:#db2777" data-action="show-chapter" data-idx="5">
+          <div class="ch-card-header">
+            <div class="ch-sin-badge" style="background:#db277718;color:#db2777;border:1px solid #db277730">Lust</div>
+            <div class="ch-title">6 - Lust</div>
+            <div class="ch-meta">1 docs</div>
+          </div>
+          <div class="ch-chars"><button class="char-pill" data-action="show-char" data-name="Nagisa Aoi" style="border-color:#dc262622"><span class="pill-dot" style="background:#dc2626"></span>Nagisa Aoi<span class="arc-dot" style="background:#f87171"></span></button></div>
+          <div class="ch-docs"><div class="doc-row" data-action="show-page" data-name="Lust"><span class="doc-row-name">Lust</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div></div>
+        </div><div class="ch-card" id="chapter-6" style="--ch-color:#16a34a" data-action="show-chapter" data-idx="6">
+          <div class="ch-card-header">
+            <div class="ch-sin-badge" style="background:#16a34a18;color:#16a34a;border:1px solid #16a34a30">Envy</div>
+            <div class="ch-title">7 - Envy</div>
+            <div class="ch-meta">1 docs</div>
+          </div>
+          <div class="ch-chars"><span class='no-data'>No characters mapped yet</span></div>
+          <div class="ch-docs"><div class="doc-row" data-action="show-page" data-name="Envy"><span class="doc-row-name">Envy</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div></div>
+        </div><div class="ch-card" id="chapter-7" style="--ch-color:#475569" data-action="show-chapter" data-idx="7">
+          <div class="ch-card-header">
+            <div class="ch-sin-badge" style="background:#47556918;color:#475569;border:1px solid #47556930">The Entity</div>
+            <div class="ch-title">8 - The Entity</div>
+            <div class="ch-meta">1 docs</div>
+          </div>
+          <div class="ch-chars"><button class="char-pill" data-action="show-char" data-name="The Entity" style="border-color:#dc262622"><span class="pill-dot" style="background:#dc2626"></span>The Entity<span class="arc-dot" style="background:#f87171"></span></button></div>
+          <div class="ch-docs"><div class="doc-row" data-action="show-page" data-name="The Entity"><span class="doc-row-name">The Entity</span><span class='doc-has-content'>●</span><span class="doc-status">Not started</span></div></div>
+        </div></div>
+  </section>
+
+  <section id="section-plotlines" class="scroll-section">
+    <div class="section-title">Master Timeline</div>
+    <div class="page-sub">All events — main story, sideplots &amp; past traumas — ordered chronologically</div>
+
+    <div class="tl-legend">
+      <div class="tl-legend-item"><span class="tl-type-badge tl-main">MAIN</span> Main story</div>
+      <div class="tl-legend-item"><span class="tl-type-badge tl-sideplot">SIDE</span> Sideplot</div>
+      <div class="tl-legend-item"><span class="tl-type-badge tl-trauma">TRAUMA</span> Past trauma</div>
+      <div class="tl-legend-item"><span class="tl-type-badge tl-flashback">FLASH</span> Flashback</div>
+      <div class="tl-legend-item"><span class="tl-type-badge tl-offscreen">OFF</span> Offscreen</div>
+      <div class="tl-legend-era"><span class="tl-era-dot tl-era-past"></span>Past</div>
+      <div class="tl-legend-era"><span class="tl-era-dot tl-era-present"></span>Present</div>
+    </div>
+
+    <div class="tl-note">The timeline begins with past traumatic events that shape the main character and the antagonists, feeding into the present events where the main character confronts these issues. Sideplots run concurrently, adding depth to the main narrative. Each main plot event is a confrontation with a sin, leading to character growth and resolution.</div>
+
+    <div class="tl-master" id="tl-master">
+      <div style="color:var(--dim);font-style:italic;padding:20px 0" id="tl-loading">Loading timeline…</div>
+    </div>
+  </section>
+
+  <section id="section-relationships" class="scroll-section">
+    <div class="section-title">Character Relationships</div>
+    <div class="page-sub">Every character with all mapped relationship links and reasoning</div>
+    <div class="rel-explorer">
+      <div class="rel-char-list" id="rel-char-list"><button class="rel-char-item" data-action="rel-char-select" data-name="Alan"><div class="rel-char-name">Alan</div><div class="rel-char-meta">Boss · Chapter 3 - Pride · 1 links</div></button><button class="rel-char-item" data-action="rel-char-select" data-name="Alice"><div class="rel-char-name">Alice</div><div class="rel-char-meta">NPC · 3 - Pride, Chapter 3 - Pride · 0 links</div></button><button class="rel-char-item" data-action="rel-char-select" data-name="Edward Daniels"><div class="rel-char-name">Edward Daniels</div><div class="rel-char-meta">Boss · Chapter 1 - Wrath · 1 links</div></button><button class="rel-char-item" data-action="rel-char-select" data-name="Nagisa Aoi"><div class="rel-char-name">Nagisa Aoi</div><div class="rel-char-meta">Boss · Chapter 6 - Lust · 0 links</div></button><button class="rel-char-item" data-action="rel-char-select" data-name="Rachel Daniels"><div class="rel-char-name">Rachel Daniels</div><div class="rel-char-meta">NPC · 1 - Wrath, Chapter 1 - Wrath · 0 links</div></button><button class="rel-char-item" data-action="rel-char-select" data-name="Sarah Daniels"><div class="rel-char-name">Sarah Daniels</div><div class="rel-char-meta">Ally · 3 - Pride, Chapter 1 - Wrath, Chapter 1 - Wrath and Chapter 3 - Pride · 2 links</div></button><button class="rel-char-item" data-action="rel-char-select" data-name="The Entity"><div class="rel-char-name">The Entity</div><div class="rel-char-meta">Boss · 8 - The Entity · 0 links</div></button></div>
+      <div class="rel-info" id="rel-info-box">
+        <div class="rel-info-empty">Select a character to view their full relationship web and reasoning.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="section-missing" class="scroll-section">
+    <div class="section-title">Missing &amp; Fragile Threads</div>
+    <div class="page-sub">Brutal honest review from your Atlus/Sega narrative director</div>
+    <div class="section-label">Gaps</div>
+    <div class="gaps-list"><div class="gap-card" style="border-left:3px solid #ef4444"><div class="gap-top"><span class="gap-sev" style="color:#ef4444">Critical</span><span class="gap-title">Missing character development for Wrath boss</span></div><p class="gap-desc">The Wrath boss, Edward Daniels, lacks detailed development in terms of his emotional journey and how he will be confronted by the main character.</p></div><div class="gap-card" style="border-left:3px solid #f97316"><div class="gap-top"><span class="gap-sev" style="color:#f97316">Moderate</span><span class="gap-title">Unclear resolution for Envy and Gluttony chapters</span></div><p class="gap-desc">The Envy and Gluttony chapters are mentioned but lack detailed storyline progression, making it unclear how these sins will be addressed and resolved.</p></div></div>
+    <div class="section-label">Director Recommendations</div>
+    <div class="recs-list"><div class="rec-card"><div class="rec-num">01</div><div><div class="rec-title">Develop Wrath boss's emotional journey</div><p class="rec-detail">Expand on Edward Daniels' backstory and emotional struggles to create a more compelling and relatable character.</p></div></div><div class="rec-card"><div class="rec-num">02</div><div><div class="rec-title">Outline Envy and Gluttony chapter storylines</div><p class="rec-detail">Provide detailed storyline progression for the Envy and Gluttony chapters to ensure consistency with the core theme and inspirations.</p></div></div></div>
+  </section>
+
+</main>
+
+<div class="modal-backdrop" id="char-modal" data-action="close-modal" data-modal="char-modal">
+  <div class="modal modal-wide">
+    <button class="modal-close" data-action="close-modal" data-modal="char-modal">&#215;</button>
+    <div class="modal-tag" id="cm-role"></div>
+    <div class="modal-name" id="cm-name"></div>
+    <div class="modal-sub" id="cm-sub"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <span class="arc-badge" id="cm-arc"></span>
+    </div>
+
+    <div id="cm-nova-loading" style="display:none;text-align:center;padding:24px 0">
+      <div class="nova-spinner"></div>
+      <div style="color:var(--muted);font-size:12px;margin-top:10px">Nova is thinking…</div>
+    </div>
+    <div id="cm-no-analysis" style="display:none;color:var(--dim);font-style:italic;font-size:12px;padding:8px 0">No Nova analysis generated for this character.</div>
+
+    <div id="cm-nova-body">
+      <div id="cm-verdict-section" class="modal-section" style="display:none">
+        <div class="modal-verdict" id="cm-verdict"></div>
+      </div>
+
+      <div class="modal-grid-2">
+        <div id="cm-emotional-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Emotional Core</div>
+          <div class="modal-section-value" id="cm-emotional"></div>
+        </div>
+        <div id="cm-sin-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Sin Embodiment</div>
+          <div class="modal-section-value" id="cm-sin-emb"></div>
+        </div>
+        <div id="cm-arc-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Arc Analysis</div>
+          <div class="modal-section-value" id="cm-arc-analysis"></div>
+        </div>
+        <div id="cm-player-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Player Connection</div>
+          <div class="modal-section-value" id="cm-player"></div>
+        </div>
+        <div id="cm-pivotal-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Pivotal Moment</div>
+          <div class="modal-section-value" id="cm-pivotal"></div>
+        </div>
+        <div id="cm-rels-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Relationship Web</div>
+          <div class="modal-section-value" id="cm-rels"></div>
+        </div>
+      </div>
+
+      <div id="cm-weakness-section" class="modal-section modal-warning-card" style="display:none">
+        <div class="modal-section-label">⚠ Critical Weakness</div>
+        <div class="modal-section-value" id="cm-weakness"></div>
+      </div>
+      <div id="cm-director-section" class="modal-section modal-accent-card" style="display:none">
+        <div class="modal-section-label">🎬 Director's Note</div>
+        <div class="modal-section-value" id="cm-director"></div>
+      </div>
+    </div>
+
+    <!-- Fallback sections (shown when no nova analysis) -->
+    <div id="cm-backstory-section" class="modal-section" style="display:none">
+      <div class="modal-section-label">Backstory</div>
+      <div class="modal-section-value" id="cm-backstory"></div>
+    </div>
+    <div id="cm-note-section" class="modal-section">
+      <div class="modal-section-label">Narrative Potential</div>
+      <div class="modal-section-value" id="cm-note"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="chapter-modal" data-action="close-modal" data-modal="chapter-modal">
+  <div class="modal modal-wide">
+    <button class="modal-close" data-action="close-modal" data-modal="chapter-modal">&#215;</button>
+    <div class="modal-tag" id="chm-sin"></div>
+    <div class="modal-name" id="chm-name"></div>
+    <div class="modal-sub" id="chm-sub"></div>
+
+    <div id="chm-nova-loading" style="display:none;text-align:center;padding:24px 0">
+      <div class="nova-spinner"></div>
+      <div style="color:var(--muted);font-size:12px;margin-top:10px">Nova is thinking…</div>
+    </div>
+    <div id="chm-no-analysis" style="display:none;color:var(--dim);font-style:italic;font-size:12px;padding:8px 0">No Nova analysis generated for this chapter.</div>
+
+    <div id="chm-nova-body">
+      <div id="chm-verdict-section" class="modal-section" style="display:none">
+        <div class="modal-verdict" id="chm-verdict"></div>
+      </div>
+      <div class="modal-grid-2">
+        <div id="chm-sin-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Sin as Narrative Device</div>
+          <div class="modal-section-value" id="chm-sin-theme"></div>
+        </div>
+        <div id="chm-peak-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Emotional Peak</div>
+          <div class="modal-section-value" id="chm-peak"></div>
+        </div>
+        <div id="chm-pacing-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Pacing &amp; Structure</div>
+          <div class="modal-section-value" id="chm-pacing"></div>
+        </div>
+        <div id="chm-chars-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">Character Dynamics</div>
+          <div class="modal-section-value" id="chm-chars-dyn"></div>
+        </div>
+        <div id="chm-strength-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">✓ Strongest Element</div>
+          <div class="modal-section-value" id="chm-strength"></div>
+        </div>
+        <div id="chm-gap-section" class="modal-section" style="display:none">
+          <div class="modal-section-label">✗ Critical Gap</div>
+          <div class="modal-section-value" id="chm-gap"></div>
+        </div>
+      </div>
+      <div id="chm-director-section" class="modal-section modal-accent-card" style="display:none">
+        <div class="modal-section-label">🎬 Director's Note</div>
+        <div class="modal-section-value" id="chm-director"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="page-modal" data-action="close-modal" data-modal="page-modal">
+  <div class="modal">
+    <button class="modal-close" data-action="close-modal" data-modal="page-modal">&#215;</button>
+    <div class="modal-tag">Page Content</div>
+    <div class="modal-name" id="pm-name"></div>
+    <div class="modal-section" style="margin-top:16px">
+      <div class="modal-section-value" id="pm-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var characters = [{"name": "Edward Daniels", "role": "Boss", "chapter": "Chapter 1 - Wrath", "sin": "Wrath", "emotional_note": "Players will empathize with Edward as they witness his struggle with guilt and anger stemming from a tragic event in his past, and his inability to cope with his emotions in a healthy way.", "backstory_summary": "Edward's career as a detective led to the death of his wife, Rachel, causing him to become abusive and distant from his daughter, Sarah. His wrath is a manifestation of his unresolved guilt and anger.", "arc_status": "Partially Developed"}, {"name": "Alan", "role": "Boss", "chapter": "Chapter 3 - Pride", "sin": "Pride", "emotional_note": "Players will feel a mix of sympathy and frustration towards Alan as they see his ego and vindictiveness cause harm to those around him, particularly Sarah, his assistant.", "backstory_summary": "Alan's success as a writer was overshadowed by his tumultuous relationship with his wife, Alice. After their separation, Alan became consumed with pride and resentment, leading him to manipulate the truth to protect his ego.", "arc_status": "Partially Developed"}, {"name": "Sarah Daniels", "role": "Ally", "chapter": "Chapter 1 - Wrath and Chapter 3 - Pride", "sin": "N/A", "emotional_note": "Players will root for Sarah as she navigates her ambitions and the challenges posed by her father's wrath and Alan's pride.", "backstory_summary": "Sarah is Edward's daughter, who aspires to be an investigative journalist like her father. She becomes entangled in the sins of wrath and pride as she seeks to help the main character confront these issues.", "arc_status": "Partially Developed"}, {"name": "Rachel Daniels", "role": "NPC", "chapter": "Chapter 1 - Wrath", "sin": "", "emotional_note": "Deceased wife of Edward, source of his guilt", "backstory_summary": "Rachel was Edward's wife who died in a car accident orchestrated by a local gang Edward was investigating. Her death has deeply affected Edward, leading to his alcoholism and emotional instability.", "arc_status": "Undeveloped"}, {"name": "Sarah Daniels", "role": "Ally", "chapter": "Chapter 1 - Wrath", "sin": "", "emotional_note": "Edward and Rachel's daughter, struggling with her father's behavior", "backstory_summary": "Sarah is Edward and Rachel's daughter. She admires her father's work but is frustrated by his refusal to let her pursue her ambitions as an investigative journalist.", "arc_status": "Partially Developed"}, {"name": "Alice", "role": "NPC", "chapter": "Chapter 3 - Pride", "sin": "", "emotional_note": "Alan's ex-wife, source of his vindictiveness", "backstory_summary": "Alice was Alan's wife and agent. She left Alan during a writer's block, leading to his vindictive and obsessive behavior.", "arc_status": "Undeveloped"}, {"name": "Nagisa Aoi", "role": "Boss", "chapter": "Chapter 6 - Lust", "sin": "Lust", "emotional_note": "Obsessed with attention, causing unhealthy attachments", "backstory_summary": "Nagisa grew up in an unstable household where love was conditional. She joined an idol company seeking parental attention and became obsessed with being irreplaceable.", "arc_status": "Undeveloped"}, {"name": "Sarah Daniels", "role": "Ally", "chapter": "3 - Pride", "sin": "", "emotional_note": "", "backstory_summary": "Character Summary\nBasic info: a timid but secretly ambitious university journalism student, wants to be an investigative journalist in the future\nPersonality: shy, only open to those that she is close with, polite, ambitious\nAppearance\n[I guess the closest person we can base this off of would be Ann from PS5? Probably not her appearance, but more of mannerisms and personality perhaps. Not sure what to put here for now]\nBackground\nAt the beginning of the story, Sarah is a close friend of the MC, ", "arc_status": "Undeveloped"}, {"name": "The Entity", "role": "Boss", "chapter": "8 - The Entity", "sin": "", "emotional_note": "", "backstory_summary": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "arc_status": "Undeveloped"}, {"name": "Alice", "role": "NPC", "chapter": "3 - Pride", "sin": "", "emotional_note": "", "backstory_summary": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "arc_status": "Undeveloped"}, {"name": "Rachel Daniels", "role": "NPC", "chapter": "1 - Wrath", "sin": "", "emotional_note": "", "backstory_summary": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "arc_status": "Undeveloped"}];
+var pageContent = {"Sarah Daniels: Character Design": "Character Summary\nBasic info: a timid but secretly ambitious university journalism student, wants to be an investigative journalist in the future\nPersonality: shy, only open to those that she is close with, polite, ambitious\nAppearance\n[I guess the closest person we can base this off of would be Ann from PS5? Probably not her appearance, but more of mannerisms and personality perhaps. Not sure what to put here for now]\nBackground\nAt the beginning of the story, Sarah is a close friend of the MC, who is aware of his past traumas, but choose not to talk about if further as she perceives the MC being reluctant. She approaches the MC regarding the problems in her family, and that leads to the start of chapter 1\nSarah always wanted to be an investigative journalism, and she was inspired by her father’s work as a young detective, but Edward is not the same man as he was 10 years ago. To Sarah, he is a problematic person who often lashes out at her for trying to start her own career, and he is projecting his trauma and mistakes onto her, refusing to let her pursue what she wants to do.\nAfter Chapter 1 ends, Sarah is free to explore her career, and by the end of Chapter 2, the best gig she could find was working as an assistant for a writer, who wrote one of her childhood books, and she felt like it would be a great opportunity to gain some writing and editing experience. However, as she works with Alan and learns about the situation, she realizes how he must be stopped, so she calls in help with the MC\nAssociated Characters\nRachel Daniels: her mother, who passed shortly after Sarah was born\nEdward Daniels: her father, vice detective in the metro police department\nAlan: the writer that she works for as an assistant (starting at the end of chapter 2)\n[MC]: close friend that she knows (since before chapter 0)", "Pride (Alan) : Character Design": "Character Summary\nBasic info: a famous writer that fell off after an incident with his wife, Alice.\nPersonality: obsessive, vindictive, clinging on to the past, prideful\nAppearance\nThin and sickly, with a scraggly beard and a long face. If you don’t know him, he might just look like your tired 50-year balding old uncle, way past his prime, but on a closer look, you might think he’s a drug addict, with his frayed hair, blood shot eyes and dirty fingernails.\nOn the few social occasions where he needs to be presentable, he has a brown tweed jacket that he always wears, from his wife. Kind of gives you a crazy scientist vibe instead.\nBackground\nAlan used to have a great relationship with his wife, who was an artist and became his confidant and inspiration when writing. As Alan found more success with writing, she became his agent. Professional writing was a new world for Alan, but as someone with a little more experience in the industry, Alice was always there to help, she was always there for Alan to bounce ideas off off, to celebrate with after a tiring but rewarding signing tour, and also the one he copes with after weeks of writer’s blocks.\nAfter a particular bad writer’s block, Alan was extremely frustrated: working off of a few hours of sleep, 3 americanos and a Danish each day. Finally, his wife coudn’t see him like this anymore. At 2am, when Alan was groggy and barely conscious, she dragged him to their car to prepare for a surprise roadtrip vacation. Fuck it. Fuck the contract. He can’t keep going like this.\nAlan woke up with the sun in his eyes, in the mountain valley roads. What the hell was she thinking? She had no right to do this. “I was this close, this close, I was getting into a groove”. Cars screeches, they both jump out, and his screams echoes in the valley. With little to no sleep, dazed, mad, manic, he simply cannot understand how she could interrupts his life’s work. This is his work, and his work alone. How could she mess with it like that?\nThe drive back was insufferable. She doesn’t deserve him, and he doesn’t deserve to get his work messed up like that. Alice leaves him, and there’s no one around him that dares to say otherwise. He grows more vindictive by the day, and fails to deliver the manuscript anyways. He grows even more obessive and crazy, cutting off ties with anyone else that used to work with him: he couldn’t afford anyone he couldn’t control. He starts to write a “tell-all”, a once in a generation expose that reveals how he was manipulated by his wife, a scathing piece of fiction that ranges from discredits everything contribution her wife made, to describing a twisted version of reality during that fateful confrontation in the valley.\nBut unfortunately, he couldn’t handle all the work. He came to the realization that he still needed someone to help him with logistics and to bounce ideas off of. But it can’t be Alice again, it has to be someone new. Out of the pool of applicants for the position of his assistant, he spots someone passionate, loves his previous works, and inexperienced… someone he knows will not meddle with his work.\n[?] gets hired. She grew up loving Alan’s work, and while she knows about the split between Alan and his agent, she dismissed it as regular industry drama, and worked hard for what she thought was an opportunity of a lifetime. Alan needed someone to fill Alice’s shoes, but in a way that he can control, in a way that places ultimate respect and all credit to himself. But in the first few weeks of their professional relationship, Alan starts to mistreat her in the same way he mistreated Alice. Some attempts by [?] to help Alan with his work got firmly rejected, viewed as attempts of meddling and disrespect. During the few times [?] got a peek at the manuscript, she starts to notice how twisted Alan is, and how his version of the story cannot get out. As Alan reshapes his manuscript, his interpretation of what happened gets more and more twisted, feeding into his own pride even more. This cannot continue.\nStoryline Summary\nDetails: Pride (Alan) : Storyline Progression\nSupporting material: Pride (Alan) : Props & Tools\nAssociated Characters\nAlice: wife and former agent of Alan\nSarah: The freshly graduated, new assistant to Alan\n[MC]: A friend of Sarah", "Story Outline 0.1": "This page outlines the general story arc of '7 Sins,' including the core theme that confronting pain is better than avoiding it, the role of the entity in erasing memories, and the design of the bosses as representations of the seven deadly sins. It also details the progression of the main character and the group as they battle the sins and eventually the entity itself.", "Pride (Alan) : Props & Tools": "Alan’s Manuscript Excerpt 1\nDescription: Alan’s interpretation of what happened at during the Valley drive, leading up to a fight, showing some inconsistencies in his memories and psyche.\nA sense of swaying and oscillation vibrations awakened me, as I felt the worn and harsh backseats of the sedan. I woke up, one eye opened and another staring at the passenger’s side seats in front of me. It wouldn’t be the first time that I was kicked out of my own house and sleep in the garage, but… this time the car was moving, and fast, and there was a harsh sunlight in my eyes.\n“Oh hello there.” How did she know I was awake? I haven’t moved an inch. “I know that I should have asked you ahead of time, but I know you would say no…”\n“What?”\n“You can’t keep working Alan, that story is killing you. Who cares about the deadline? I swear, just let it pass by and I’ll find the next opportunity for you. I’ll find a deal with a better publisher who will give you more time, and…”\n“Where are we going?”\n“Pioneer’s ridge, you loved that place as a kid right?”\nI couldn’t believe it. I sit up, and our eyes lock in the rearview mirror. “You have no right. NO RIGHT.” I collected all my frustration and screamed it out of my lungs. She doesn’t get it. “This is my work, MY WORK. You don’t get to decide how this works, I do!”\nAnd then, she laughs. She laughs as if what I said made no sense, as if she doesn’t care for my opinion at all. She dares to laugh. The clouds in the valley covers the sky and press against the trees\n“Stop the car.”\nThe laugh continues ringing in my head. It felt like it was from everywhere: from her head, from the speakers of the car, from the rumblings of the engine, from deep into the valley. The sun is blinding.\n“STOP THE CAR!”\nAlan’s Manuscript Excerpt 2\nDescription: the aftermath of the fight between Alan and Alice, demonstrating his denial of his faults and the justification of his future actions.\nThe clouds in the valley seems to close in, but the sun is every more bright. Every curve, I brake a little less, hug the curve a little more. There was no time to waste. The top heavy SUV sways with each turn.\n“Please Alan, you have to stop,” she cried in the backseat, “slow down, you could kill us!”\n“You have to understand, this was not what I wanted, I just wanted to help, please, let me help you…”\nIt was like resisting the calls of a siren. That woman back there is not my wife. That person is long gone. What’s left is the twisted shell of someone that pretends to care. I will not be tempted again. I will not listen.\nI will be manipulated no more.\nPieces of Evidence (In Alan’s office)\nThese pieces of information helps MC understand Alan’s version of reality, and contradictions in Alan’s story demonstrates his lies, while hinting at what actually happened.\nManuscript 1: contradictions in the weather, weird behavior from Alice, unusual description of the dialogue\nManuscript 2: contradiction between Alice dialogue and how Alan interpreted them.\nPictures of his apartment: they didn’t have a garage, they sold their car long ago, contradicts with Manuscript 1.\nHis computer & childhood photos: Pioneer’s ridge isn’t a real tourist attraction, but Alice and Alan’s favorite restaurant that reminds him of where he grew up.", "Pride (Alan) : Storyline Progression": "Storyline\nForeshadowing\nSarah asks MC for help on an interview. Lays out the premise of her ambitions in journalism, and how its hard to land a gig with no experience, so she really wants to get in with this writer who is hiring assistants.\n“Well if you don’t mind, umm…” she brings out a book from her backpack, “I’ll get straight to it. This is what I read growing up as a kid, and [a book about Alan’s personal struggles when he was young]. And guess what, I just got a foot in the door with the author.”\n“And I know, before you say anything, its probably not the most relevant and resume-building position I could look for… but this is a pretty crazy opportunity to pass up, and I could gain some valuable experience in terms of writing and story building.”\n“Why got you into journalism?”\nThe MC presses the issue after noticing Sarah’s stress creep up over time.\n“I’m sorry, but I have to ask again, and I really don’t mean to probe, but it’s just hard seeing you like this everyday… If it would make you feel better to talk about it, I’d be happy to listen.”\nProgression\nAs Sarah has learned Alan’s habits over time, she steals Alan’s keys after the group plans to investigative further in his office. She helps out with MC during combat. Since Sarah is the one most familiar with the space, she helps the team finds most of the crucial evidence, including the manuscript pages, among other evidence.\nAs MC and his team explores Alan’s office, (among other findings) they find the manuscript of the “tell-all”. Alan’s twisted version of reality hints at what actually happened to Alice, and what caused this whole incident. Most of what MC knows about comes from conjecture and inferences made given the pieces of information in the office + assistant + manuscript.\nThe conclusion from MC is that the fight between Alan and Alice occurred, but under very different circumstances. Alan was blinded by his ego and clearly out of line. He changed his version of the story detail by detail to make him seem like the victim.\nFinal showdown\nAfter the team battles off the [Sin Entities] that surrounded Alan, they take advantage of his weakness and questions what really happened, especially what happened on that drive to the valley.\nSarah points out how details from Alan’s past work (her favorite book) and how it inspired her, but cynically, Alan states how he faked / exaggerated many parts of the novel in order to dramatize his past and mold his story, which starts to click in his mind in terms of the parallels to his tell-all.\nMC points out the inconsistencies in the reality Alan has tried to shape, and how he is mistreating Sarah in the same way he mistreated his ex-wife. Alan’s psyche breaks, as his understanding of reality contradicts with his liberated memories. He breaks down as he realize what he was trying to do, then horrified at the consequences of his decisions. He makes the decision to burn the manuscript, and calls Alice to try to make amends.\n“This is not who you are!” Sarah cries with tears in her eyes, “this is not", "Wrath: Character Design": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "Greed: Character Design": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "The Entity": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "Envy": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "Lust": "High Level Overview:\nCharacters: Nagisa Aoi (The idol)\nCore Theme: Fear of being unwanted turning into obsession of being irreplaceable\nBackstory:\nThe idol grew up in an unstable household →love was conditional for her.\nBecause of this she internalized a rule: I’m only worth loving when I am wanted\nShe joined an idol company because of this → obsessed with parent’s attention\nlands a major performance with a group → convinces herself this is her opportunity to fame → parents approval\nafter the performance she scrolls through social media about her performance→ everyone else gets praise and attention except her\nPresent Time Issue:\nShe is able to control the emotions of people around her due to her sin → obsession over attention\nmakes people develop unhealthy attachment\npeople stop going to school/jobs\nsever their relationships\nResolution:\n(boss fight is during one of her concerts where everyone is gathered)\nonce the sin is defeated people come to their senses → leave the concert until it is empty\nrealizes that despite her efforts she is undesired and she must come to terms with that", "Gluttony": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "Chapters Outline 0.1": "Chapter 0 - Intro\nInvolved characters:\nSetting(s):\nChapter 1 - Wrath\nInvolved characters: Edward Daniels, Rachel Daniels, Sarah Daniels, MC\nSetting(s):\nStoryline:\nChapter 2 - Gluttony\nInvolved characters:\nSetting(s):\nChapter 3 - Pride\nInvolved characters: Alan, Alice, MC, Sarah\nSetting(s):\nAt Sarah’s favorite cafe\nAlan Wake’s home office at his apartment\nStoryline:\nPride (Alan) : Storyline Progression\nChapter 4 - Sloth\nChapter 5 - Greed\nChapter 6 - Lust\nChapter 7 - Envy\nChapter 9 - Finale", "Wrath (Edward Daniels) : Character Design": "Character Summary\nBasic info: a formerly sharp but now washed up and alcoholic detective in the metro police\nPersonality: loving but controlling, regretful, abusive, moody and mad when drunk\nAppearance\nIf you don’t know him, Edward looks more than normal for his age. A little greying in his beard and hair, but looks fit and energetic enough to still be a cop. He wears nothing but short sleeved T shirts and cargo pants, classy mid-40s mid-west dad vibes.\nThere is a mutual agreement between Sarah and Edward to make sure they appear as normal and happy as they can on the outside. Arguments in the car ride to school will instantly end if her friends spots her.\nBackground\nWhen Edward first got promoted from a beat cop to the detective squad, he could not have predicted how much his work would forever change his family. He did a with his time at vice, but it came at a cost. When Sarah was still a baby, a car accident orchestrated by a local gang he was investigating left Rachel dead, with Sarah and himself being lucky to have lived. Edward still remembers that till this day. In the field of investigations, no matter how successful you are, there is always a cost. The deeper you look, the more trouble you’ll find, and he quit the squad for a desk job at the precinct son after. He won’t let his work impact his family again.\nBut work continues to impact the Daniels household nonetheless. Sarah has grown up admiring his father: hearing heroic stories told by family friends and colleagues and dinner parties. She wasn’t the type to get out on the street, but she inspired to be an investigative reporter, digging deep and exposing those in power, corrupt corporations, abusive individuals hiding in plain sight. Whenever Sarah gives hints of her ambitions, Edward vehemently forbids her. This family has been through enough tragedies. The same cannot happen to her and her future family. Sarah’s children will not grow up with a drunken, PTSD ridden and unstable parent. His mind is not good for much anymore, but that idea is rooted deep.\nEdward never wanted to cause this divide between him and his daughter, but if that’s the price of keeping her safe, he was willing to pay it. Alcohol is his biggest vice, and when he is inebriated, even slight hints of disobedience form Sarah can set him off. The drunken tirades always happen in the evenings, and always ending with dinner on the floor, slammed doors and subdued sniffles in Sarah’s room. The next morning, Edward would spend his time picking up broken pieces of plates in the living room floor, throwing away all the liquor in his cabinet, and cook Sarah’s favorites for breakfast. He’s not a man of many words, and he does his best with actions to apologize. But he could not see the pressure that builds up in Sarah each time. Some day, an apology will not be enough.\nStoryline Summary\nDetails:\nSupporting material:\nAssociated Characters\nSarah Daniels: Daughter and only child\nRachel Daniels: Wife, whose death has plagued Edward with guilt", "Alice: Character Design": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "Rachel Daniels: Character Design": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "Sloth": "Background\nContext, objectives, and scope of the document\nAnalysis\nResearch findings, data insights, and key considerations\nRecommendations\nProposed solutions, strategies, and next steps\nImplementation\nAction items, timeline, and resource requirements", "Main Character": "The main character grew up with parents who were frequently absent due to working multiple low-paying jobs, which led them to take on responsibility for caring for their younger sister while also feeling pressure to succeed academically to avoid the same life (as their parents). Over time, the combined stress of school and caretaking became unsustainable, causing their performance and emotional stability to deteriorate. When the sister noticed and tried to help, the main character reacted with frustration and pushed her away, after which she ran off and something serious happened to her (not sure what but something within roblox tos). The adults around the main character did not place blame, instead offering reassurance and moving on, which left the main character with unresolved guilt, anger, and the sense that the weight they carried was never acknowledged. At this point, an external entity intervened and removed the main character’s memory of this suffering -> the story starts here"};
+var chapterOverview = {"0": {"summary": "This chapter explores the sin of wrath through the story of Edward Daniels, a detective whose work has caused personal tragedy. His wrath manifests as abusive behavior towards his daughter, Sarah, leading to conflict within the family. The main character must confront Edward's wrath and help him come to terms with his past to resolve the family's issues.", "color": "#dc2626", "sin": "Wrath", "chars": ["Edward Daniels", "Sarah Daniels", "Rachel Daniels", "Sarah Daniels", "Rachel Daniels"]}, "1": {"summary": "1 docs · 0 characters · 0/1 complete", "color": "#ca8a04", "sin": "Greed", "chars": []}, "2": {"summary": "Pride is embodied by Alan, a writer who has fallen from grace and is now consumed by his ego and vindictiveness. The main character, along with Sarah, his assistant, must uncover the truth behind Alan's twisted version of events and help him confront his pride to prevent further harm.", "color": "#7c3aed", "sin": "Pride", "chars": ["Alan", "Sarah Daniels", "Alice", "Sarah Daniels", "Alice"]}, "3": {"summary": "1 docs · 0 characters · 0/1 complete", "color": "#ea580c", "sin": "Gluttony", "chars": []}, "4": {"summary": "1 docs · 0 characters · 0/1 complete", "color": "#2563eb", "sin": "Sloth", "chars": []}, "5": {"summary": "1 docs · 1 characters · 0/1 complete", "color": "#db2777", "sin": "Lust", "chars": ["Nagisa Aoi"]}, "6": {"summary": "1 docs · 0 characters · 0/1 complete", "color": "#16a34a", "sin": "Envy", "chars": []}, "7": {"summary": "1 docs · 1 characters · 0/1 complete", "color": "#475569", "sin": "The Entity", "chars": ["The Entity"]}};
+var chapterNames = ["1 - Wrath", "2 - Greed", "3 - Pride", "4 - Gluttony", "5 - Sloth", "6 - Lust", "7 - Envy", "8 - The Entity"];
+var chapterIndexMap = {"1 - Wrath": "0", "2 - Greed": "1", "3 - Pride": "2", "4 - Gluttony": "3", "5 - Sloth": "4", "6 - Lust": "5", "7 - Envy": "6", "8 - The Entity": "7"};
+var relationshipIndex = {"Alan": [{"direction": "outgoing", "other": "Sarah Daniels", "relationship": "Employer and employee with a deteriorating relationship due to Alan's pride.", "reasoning": "Employer and employee with a deteriorating relationship due to Alan's pride."}], "The Entity": [], "Sarah Daniels": [{"direction": "incoming", "other": "Edward Daniels", "relationship": "Father and daughter with a strained relationship due to Edward's wrath.", "reasoning": "Father and daughter with a strained relationship due to Edward's wrath."}, {"direction": "incoming", "other": "Alan", "relationship": "Employer and employee with a deteriorating relationship due to Alan's pride.", "reasoning": "Employer and employee with a deteriorating relationship due to Alan's pride."}], "Alice": [], "Rachel Daniels": [], "Nagisa Aoi": [], "Edward Daniels": [{"direction": "outgoing", "other": "Sarah Daniels", "relationship": "Father and daughter with a strained relationship due to Edward's wrath.", "reasoning": "Father and daughter with a strained relationship due to Edward's wrath."}]};
+var characterMeta = {"Edward Daniels": {"roles": ["Boss"], "chapters": ["Chapter 1 - Wrath"], "statuses": ["Partially Developed"]}, "Alan": {"roles": ["Boss"], "chapters": ["Chapter 3 - Pride"], "statuses": ["Partially Developed"]}, "Sarah Daniels": {"roles": ["Ally"], "chapters": ["3 - Pride", "Chapter 1 - Wrath", "Chapter 1 - Wrath and Chapter 3 - Pride"], "statuses": ["Partially Developed", "Undeveloped"]}, "Rachel Daniels": {"roles": ["NPC"], "chapters": ["1 - Wrath", "Chapter 1 - Wrath"], "statuses": ["Undeveloped"]}, "Alice": {"roles": ["NPC"], "chapters": ["3 - Pride", "Chapter 3 - Pride"], "statuses": ["Undeveloped"]}, "Nagisa Aoi": {"roles": ["Boss"], "chapters": ["Chapter 6 - Lust"], "statuses": ["Undeveloped"]}, "The Entity": {"roles": ["Boss"], "chapters": ["8 - The Entity"], "statuses": ["Undeveloped"]}};
+var characterAnalyses = {"Alan": {"verdict": "Alan's character is working narratively, but has potential for deeper impact.", "emotional_core": "Alan's emotional truth is rooted in his need for validation and control, stemming from his failed marriage and professional setbacks.", "sin_embodiment": "Alan embodies Pride through his manipulative and egotistical behavior, distorting reality to maintain his self-image as the victim.", "arc_analysis": "Alan's arc shows promise with his manipulative nature and descent into madness, but could be more nuanced in showing the consequences of his actions on others.", "player_connection": "Players will feel a mix of sympathy and frustration towards Alan, as they witness the harm caused by his ego and vindictiveness, particularly towards Sarah.", "pivotal_moment": "The scene where Alan breaks down and realizes the consequences of his actions, deciding to burn his manuscript and attempt to make amends with Alice, would be pivotal.", "weakness": "The biggest narrative weakness is the lack of depth in Alan's backstory and motivations, making it harder for players to fully understand his actions.", "director_note": "Develop Alan's backstory further to provide more context for his actions and motivations, enhancing player empathy and understanding.", "relationship_web": "Alan's relationships, particularly with Alice and Sarah, shape his prideful and vindictive nature, with Alice's departure and Sarah's mistreatment highlighting his flaws.", "overall_score": "6/10 — Alan has a compelling concept but needs more depth and nuance to fully resonate with players."}, "Alice": {"verdict": "Alice is currently not working narratively due to lack of development.", "emotional_core": "Alice's emotional truth is rooted in feeling unappreciated and manipulated by Alan, leading to her decision to leave him.", "sin_embodiment": "Alan embodies pride through his obsessive and vindictive behavior, not Alice. Her sin is currently unknown and undeveloped.", "arc_analysis": "Alice's current arc is undeveloped and lacks depth, making it hard to analyze where it could soar or fail.", "player_connection": "Players may connect with Alice's story if her past trauma and motivations are fleshed out, showing a relatable struggle with unacknowledged efforts.", "pivotal_moment": "A pivotal moment for Alice could be her decision to leave Alan during his writer's block, highlighting her frustration and desire for agency.", "weakness": "The single biggest narrative weakness is the lack of backstory and development for Alice, making her feel one-dimensional.", "director_note": "Immediately develop Alice's backstory and motivations to provide depth and emotional truth to her character.", "relationship_web": "Alice's relationships, particularly with Alan, shape her decision to leave him, but her connection with Sarah could provide additional depth and context.", "overall_score": "3/10 — Needs more backstory, motivation, and development to become a compelling character."}, "Edward Daniels": {"verdict": "Edward's character is narratively functional but could be more compelling.", "emotional_core": "Edward's emotional truth is rooted in unresolved guilt and anger over his wife's death, which drives his abusive behavior and alcoholism.", "sin_embodiment": "Edward embodies Wrath both literally through his abusive outbursts and symbolically through his inability to process his emotions healthily.", "arc_analysis": "His arc currently shows promise by highlighting his internal struggle and the impact on his family, but it could be more nuanced by exploring his attempts to reconcile with his past and daughter.", "player_connection": "Players will likely empathize with Edward due to his tragic backstory and the relatable struggle with unresolved grief and anger, making him a sympathetic character.", "pivotal_moment": "A pivotal moment could be when Edward, in a vulnerable state, confronts Sarah about his regrets and the impact of his actions on her life.", "weakness": "The biggest narrative weakness is the lack of depth in Edward's attempts to change or seek help, which could make his character feel static.", "director_note": "Develop Edward's journey towards self-reflection and potential redemption by showing his struggles and small steps towards change.", "relationship_web": "His relationships, particularly with Sarah, shape his character significantly. Sarah's ambition and Edward's protective yet harmful behavior create a complex dynamic that drives his arc.", "overall_score": "6/10 — Edward has a strong foundation but needs more depth and development to fully resonate with players."}, "Nagisa Aoi": {"verdict": "Nagisa Aoi is a compelling character, but her narrative execution needs refinement.", "emotional_core": "Nagisa's emotional truth is her fear of being unwanted, stemming from an unstable childhood where love was conditional.", "sin_embodiment": "Nagisa embodies Lust literally by controlling the emotions of others, causing them to develop unhealthy attachments and neglect responsibilities.", "arc_analysis": "Nagisa's arc has potential but currently lacks depth. Her backstory is intriguing, but her role as a boss needs more development to fully explore her internal conflict and resolution.", "player_connection": "Players may sympathize with Nagisa due to her relatable fear of rejection, but her impact could be stronger with more fleshed-out interactions and a deeper resolution.", "pivotal_moment": "The pivotal moment would be during her concert boss fight, where she realizes that despite her efforts, she is undesired and must accept this truth.", "weakness": "The biggest narrative weakness is the lack of development in her arc, making her feel more like a one-dimensional villain than a complex character.", "director_note": "Develop Nagisa's interactions with other characters to show her emotional journey and provide more backstory that leads to her current state.", "relationship_web": "Nagisa's relationships, especially with her parents and fans, shape her obsession with attention and validation. Her parents' conditional love is the root of her issues, and her fans' neglect during her concert highlights her isolation.", "overall_score": "6/10 — Nagisa has a strong concept and emotional core but needs more narrative depth and development to fully resonate with players."}, "Rachel Daniels": {"verdict": "Rachel is not actively working narratively but has significant potential.", "emotional_core": "Rachel's emotional truth is one of unfulfilled potential and the haunting guilt of her unresolved death.", "sin_embodiment": "Rachel does not directly embody a sin but represents the consequences of sin (wrath) through her tragic death and its impact on Edward.", "arc_analysis": "Rachel's current arc is undeveloped but crucial for Edward's backstory and motivation, soaring in potential emotional impact but failing in current narrative presence.", "player_connection": "Players may not directly connect with Rachel but will empathize with Edward's grief and guilt, making her indirectly impactful.", "pivotal_moment": "The car accident that led to Rachel's death and its aftermath would define her character if fleshed out with emotional depth.", "weakness": "The single biggest narrative weakness is the lack of development and presence of Rachel in the story.", "director_note": "Develop Rachel's backstory and her impact on Edward and Sarah to create a more profound emotional resonance and narrative depth.", "relationship_web": "Rachel's relationships with Edward and Sarah shape her as a symbol of lost love and the consequences of unresolved trauma; Edward matters most to her arc.", "overall_score": "4/10 — Potential is high but currently underutilized."}, "Sarah Daniels": {"verdict": "Sarah's character is working narratively by providing emotional depth and driving the protagonist's engagement with the story.", "emotional_core": "Sarah's emotional truth is her desire for independence and recognition in her chosen career, coupled with the pain of her father's inability to support her ambitions due to his own unresolved trauma.", "sin_embodiment": "While Sarah herself does not embody a sin, her story intersects with the sins of her father (Wrath) and her boss (Pride), influencing her arc and the narrative.", "arc_analysis": "Sarah's arc shows promise as she seeks to break free from her father's shadow and pursue her journalistic aspirations. However, it could be deepened by exploring her internal conflicts and growth more thoroughly.", "player_connection": "Players will likely care about Sarah as she represents the struggle for self-identity and the conflict between personal ambition and familial expectations, which are universal themes.", "pivotal_moment": "A pivotal moment for Sarah could be when she confronts her father about his refusal to support her career, leading to a heartfelt conversation that reveals deeper layers of her character.", "weakness": "The biggest narrative weakness is the lack of development in Sarah's internal struggles and how she processes her father's behavior, which could make her seem one-dimensional.", "director_note": "Enhance Sarah's internal monologue and personal reflections to give her a richer emotional landscape and make her struggles more relatable.", "relationship_web": "Sarah's relationships with her father and the protagonist are central to her arc, as they both challenge and support her in different ways, shaping her understanding of herself and her ambitions.", "overall_score": "6/10 — With potential for deeper emotional development and more complex internal conflicts, Sarah could become a more compelling character."}, "The Entity": {"verdict": "The Entity's narrative role is not fully realized, potentially confusing players.", "emotional_core": "The Entity is driven by a traumatic wound of witnessing constant suffering and wishes to alleviate it by erasing painful memories.", "sin_embodiment": "The Entity's embodiment of its sin is symbolic, representing the desire to escape pain rather than a literal manifestation of a deadly sin.", "arc_analysis": "The Entity's arc currently lacks depth, with a one-dimensional motivation that doesn't evolve or face challenges, making it less compelling.", "player_connection": "Players may struggle to connect with The Entity due to its abstract nature and lack of relatable traits or backstory.", "pivotal_moment": "A pivotal moment could involve The Entity revealing its true nature and intentions to the player, creating a moral dilemma.", "weakness": "The Entity's biggest narrative weakness is its lack of development and conflict, making it a static antagonist rather than a dynamic character.", "director_note": "Enhance The Entity's backstory to include personal experiences with pain and trauma, making its motivations more relatable and complex.", "relationship_web": "The Entity's relationships with the player and other characters are crucial for shaping its arc, particularly in revealing the consequences of its actions.", "overall_score": "4/10 — Needs deeper development and more engaging interactions to become a compelling antagonist."}};
+var chapterAnalyses = {"1 - Wrath": {"verdict": "This chapter has potential but lacks depth in character development and narrative clarity.", "sin_theme": "The chapter uses Wrath as a narrative device to explore themes of regret, guilt, and the destructive impact of unchecked anger and trauma on personal relationships.", "emotional_peak": "The emotional high point should be Edward's confrontation with his past during the battle, leading to his realization and potential redemption.", "pacing": "The pacing could be improved by providing more detailed backstory and emotional build-up before the climactic battle, ensuring the player fully understands Edward's motivations and struggles.", "character_dynamics": "The interactions between Edward, Sarah, and the unnamed protagonist drive the story forward, but Edward's character needs more development to fully convey the weight of his sins and the impact on his family.", "strongest_element": "The potential for emotional depth and character redemption is the strongest element, particularly in how the story juxtaposes Edward's desire to protect his family with the harm his actions cause.", "critical_gap": "The most urgent missing piece is a more fleshed-out character design for Edward and a clearer narrative arc that leads to his redemption or downfall, making his struggle with Wrath more impactful.", "director_note": "Immediately focus on deepening Edward's backstory and emotional journey to ensure his role in the chapter is compelling and resonates with the player.", "overall_score": "6/10 — The chapter has a solid foundation and emotional potential, but needs more depth in character development and narrative clarity to fully realize its impact."}, "2 - Greed": {"verdict": "This chapter has potential but lacks concrete details and character interactions.", "sin_theme": "The chapter explores Greed as a destructive force that warps personal and professional relationships, but it doesn't deeply integrate this theme into the narrative yet.", "emotional_peak": "The emotional peak should be Alan's realization and breakdown during the final confrontation, but it is not clearly defined in the current draft.", "pacing": "The pacing seems to be set up for a standard confrontation and resolution, but without specific details, it's hard to assess if it will be engaging.", "character_dynamics": "The interactions between Alan, Sarah, and the MC are not fully fleshed out, making it difficult to see how they drive the story forward.", "strongest_element": "The concept of Alan's twisted reality and the manuscript as a key piece of evidence is a strong narrative device.", "critical_gap": "The chapter needs more detailed character backstories and interactions to fully realize the sin of Greed and its impact on the story.", "director_note": "Immediately flesh out Alan's backstory and his relationship with Sarah to strengthen the narrative and character dynamics.", "overall_score": "4/10 — Potential is there, but the chapter needs more detailed character development and narrative integration."}, "3 - Pride": {"verdict": "This chapter is working well in exploring the theme of pride through character dynamics and narrative structure.", "sin_theme": "The chapter uses Alan's pride as a narrative device to show how it blinds him to his own faults and leads to destructive behavior, highlighting the sin's impact on his relationships and mental state.", "emotional_peak": "The emotional high point should be Alan's breakdown during the final showdown when his distorted reality collapses and he realizes the consequences of his actions.", "pacing": "The pacing is effective, gradually revealing Alan's pride and its effects through Sarah's perspective and the collected evidence, leading to a climactic confrontation.", "character_dynamics": "The characters interact in a way that highlights Alan's pride and its negative effects. Sarah's ambition and loyalty drive her to uncover the truth, while Alan's pride and obsession alienate those around him.", "strongest_element": "The strongest element is the detailed character design of Alan, showing how pride can consume a person and distort their perception of reality.", "critical_gap": "The most urgent missing piece is the completion of Alice's character design, which would provide more context for Alan's actions and motivations.", "director_note": "Complete Alice's character design to provide deeper insight into Alan's backstory and the events leading to his prideful behavior.", "overall_score": "7/10 — The chapter effectively explores the theme of pride but needs more depth in secondary characters to fully flesh out the narrative."}, "4 - Gluttony": {"verdict": "This chapter has potential but lacks clarity in its narrative direction.", "sin_theme": "The chapter could explore Gluttony as a metaphor for emotional overindulgence and its negative impacts on personal and social relationships.", "emotional_peak": "The emotional peak should be the confrontation and subsequent realization by the boss character of their gluttonous behaviors and their consequences.", "pacing": "The pacing seems to be lagging as the character designs and specific plot points are not yet defined, which may lead to a disjointed narrative flow.", "character_dynamics": "Character dynamics are not yet established, making it difficult to see how interactions will drive the story forward.", "strongest_element": "The conceptual framework for using the seven sins as narrative devices is strong and aligns well with the overall story theme.", "critical_gap": "The most urgent missing piece is the detailed development of the boss character and their backstory to fully realize the theme of Gluttony.", "director_note": "Immediately start fleshing out the boss character's design and backstory to provide a clear narrative anchor for the chapter.", "overall_score": "4/10 — Concept is strong but needs more concrete character and plot development to be effective."}, "5 - Sloth": {"verdict": "This chapter needs more depth and context to fully utilize the theme of Sloth.", "sin_theme": "Sloth in this chapter is currently lacking a clear narrative device that ties into the main story arc and character development.", "emotional_peak": "The emotional high point should be the moment when the protagonist helps the Sloth character confront their inaction and realizes the impact of their laziness.", "pacing": "The chapter's pacing may suffer from a lack of clear objectives and engaging story elements, making it feel disjointed or slow.", "character_dynamics": "Characters in this chapter need clearer motivations and interactions that highlight the consequences of slothful behavior.", "strongest_element": "The potential for a compelling backstory for the Sloth character, which could be developed further to add depth to the chapter.", "critical_gap": "A missing clear connection between the Sloth character's laziness and its effects on the world and other characters, which is crucial for the theme to resonate.", "director_note": "Immediately flesh out the Sloth character's backstory and how their inaction affects others, to strengthen the narrative around the sin of Sloth.", "overall_score": "4/10 — Potential is there, but the chapter needs more focused development to fully explore the sin of Sloth."}, "6 - Lust": {"verdict": "This chapter has potential but needs more depth in character development and emotional stakes.", "sin_theme": "The chapter effectively uses the sin of lust to explore Nagisa's internal struggle with self-worth and external validation, highlighting the destructive nature of obsession.", "emotional_peak": "The emotional peak should be during the boss fight at the concert, where Nagisa realizes the impact of her actions and the emptiness of her pursuit for attention.", "pacing": "The pacing seems solid, starting with Nagisa's backstory, progressing to her current issue, and culminating in the resolution during the concert.", "character_dynamics": "Nagisa's interactions with her fans and the resulting chaos due to her sin are central to the story, but more interaction with other characters, especially the protagonist, could strengthen the narrative.", "strongest_element": "The core theme of fear of being unwanted turning into an obsession for attention is compelling and well-grounded in Nagisa's backstory.", "critical_gap": "The chapter lacks detailed development of Nagisa's relationships and how her sin affects them, which is crucial for emotional impact.", "director_note": "Immediately flesh out Nagisa's backstory with more specific incidents and emotional beats to deepen her character and the stakes of her sin.", "overall_score": "6/10 — Strong concept with good potential, but needs more depth in character development and emotional resonance."}, "7 - Envy": {"verdict": "This chapter is not yet working as it lacks foundational elements.", "sin_theme": "The chapter has potential to explore envy as a destructive force stemming from jealousy and resentment, but it is currently undeveloped.", "emotional_peak": "The emotional peak is not yet defined as the character and storyline details are incomplete.", "pacing": "The pacing cannot be analyzed due to the lack of narrative structure and character interactions.", "character_dynamics": "Character dynamics are undefined as there are no characters mapped or developed for this chapter.", "strongest_element": "The conceptual foundation of using envy as a sin is a strong element, indicating potential for a compelling narrative.", "critical_gap": "The most urgent missing piece is the development of the Envy boss character and the associated storyline.", "director_note": "Immediately begin fleshing out the Envy boss character and storyline to provide a clear narrative direction.", "overall_score": "3/10 — Concept is strong but execution is lacking due to incomplete development."}, "8 - The Entity": {"verdict": "This chapter has potential but needs more depth and clarity in its execution.", "sin_theme": "The chapter explores the concept of erasing painful memories as a coping mechanism, using the Entity as the embodiment of this idea.", "emotional_peak": "The emotional high point should be the main character's realization that confronting pain is necessary for true healing and growth.", "pacing": "The pacing could benefit from a more gradual build-up to the final confrontation with the Entity, allowing for deeper character development and more impactful revelations.", "character_dynamics": "The main character and the Entity represent opposing views on dealing with trauma, with the Entity advocating for forgetfulness and the main character pushing for confrontation and resolution.", "strongest_element": "The central conflict between the Entity and the main character provides a strong narrative anchor for the chapter.", "critical_gap": "The chapter lacks detailed development for the Entity's character and motivations, making it harder for players to fully understand and engage with this antagonist.", "director_note": "Immediately start fleshing out the Entity's backstory and motivations to create a more compelling and relatable antagonist.", "overall_score": "6/10 — Strong concept with potential, but needs more detailed character development and clearer narrative structure."}};
+var timelineData = {"timeline": [{"id": "evt_001", "title": "Main Character's Traumatic Memory", "description": "The main character's memory of pushing their sister away is erased by an external entity.", "type": "trauma", "era": "past", "chapter": "Backstory", "characters": ["Main Character", "Sister"], "emotional_weight": "critical", "order": 1}, {"id": "evt_002", "title": "Rachel's Death", "description": "Rachel Daniels dies in a car accident orchestrated by a gang Edward was investigating.", "type": "trauma", "era": "past", "chapter": "Wrath", "characters": ["Edward Daniels", "Rachel Daniels", "Sarah Daniels"], "emotional_weight": "critical", "order": 2}, {"id": "evt_003", "title": "Alan and Alice's Road Trip", "description": "Alice takes Alan on a surprise road trip to prevent him from burning out, leading to their separation.", "type": "trauma", "era": "past", "chapter": "Pride", "characters": ["Alan", "Alice"], "emotional_weight": "high", "order": 3}, {"id": "evt_004", "title": "Sarah's Journalism Ambitions", "description": "Sarah, inspired by her father, aspires to be an investigative journalist, which Edward forbids.", "type": "sideplot", "era": "present", "chapter": "Pride", "characters": ["Sarah Daniels", "Edward Daniels"], "emotional_weight": "medium", "order": 4}, {"id": "evt_005", "title": "Alan's Manuscript Creation", "description": "Alan writes a twisted 'tell-all' manuscript about his separation from Alice, blaming her for his failures.", "type": "main", "era": "present", "chapter": "Pride", "characters": ["Alan", "Alice"], "emotional_weight": "high", "order": 5}, {"id": "evt_006", "title": "Sarah Becomes Alan's Assistant", "description": "Sarah gets hired as Alan's assistant, unaware of the twisted dynamics she will encounter.", "type": "main", "era": "present", "chapter": "Pride", "characters": ["Sarah Daniels", "Alan"], "emotional_weight": "medium", "order": 6}, {"id": "evt_007", "title": "MC Battles Wrath", "description": "The main character confronts and battles the Wrath sin, embodied by Edward Daniels.", "type": "main", "era": "present", "chapter": "Wrath", "characters": ["Main Character", "Edward Daniels", "Sarah Daniels"], "emotional_weight": "high", "order": 7}, {"id": "evt_008", "title": "Alan's Manuscript Exposed", "description": "The main character and Sarah uncover the truth behind Alan's manuscript, revealing his distorted reality.", "type": "main", "era": "present", "chapter": "Pride", "characters": ["Main Character", "Sarah Daniels", "Alan"], "emotional_weight": "high", "order": 8}, {"id": "evt_009", "title": "Alan's Realization", "description": "Alan breaks down after realizing the truth about his actions and the impact on Sarah and Alice.", "type": "main", "era": "present", "chapter": "Pride", "characters": ["Alan", "Sarah Daniels", "Alice"], "emotional_weight": "critical", "order": 9}, {"id": "evt_010", "title": "Entity's Final Confrontation", "description": "The main character and allies confront the Entity, leading to the main character remembering their past traumas.", "type": "main", "era": "present", "chapter": "Finale", "characters": ["Main Character", "Entity"], "emotional_weight": "critical", "order": 10}], "timeline_note": "The timeline begins with past traumatic events that shape the main character and the antagonists, feeding into the present events where the main character confronts these issues. Sideplots run concurrently, adding depth to the main narrative. Each main plot event is a confrontation with a sin, leading to character growth and resolution."};
+
+// ── Navigation ──
+var sections = ['outline', 'focus', 'board', 'plotlines', 'relationships', 'missing'];
+
+function scrollToSection(name) {
+  var sec = document.getElementById('section-' + name);
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.nav-item').forEach(function(n) {
+    n.classList.toggle('active', n.dataset.section === name);
+  });
+}
+
+window.addEventListener('scroll', function() {
+  var scrollY = window.scrollY + 80;
+  var active = 'outline';
+  sections.forEach(function(name) {
+    var sec = document.getElementById('section-' + name);
+    if (sec && sec.offsetTop <= scrollY) active = name;
+  });
+  document.querySelectorAll('.nav-item').forEach(function(n) {
+    n.classList.toggle('active', n.dataset.section === active);
+  });
+});
+
+// ── Modals ──
+function closeModal(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+}
+
+function openModal(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.add('open');
+}
+
+// ── Chapter focus panel ──
+function selectChapter(idx) {
+  var info = chapterOverview[String(idx)];
+  if (!info) return;
+  scrollToSection('board');
+  var panel = document.getElementById('focus-panel');
+  var pillsHtml = '';
+  if (info.chars && info.chars.length) {
+    pillsHtml = '<div class="cfp-chars">';
+    info.chars.forEach(function(name) {
+      pillsHtml += '<button class="char-pill" data-action="show-char" data-name="' + name.replace(/"/g, '&quot;') + '"><span class="pill-dot" style="background:var(--accent)"></span>' + name + '</button>';
+    });
+    pillsHtml += '</div>';
+  }
+  panel.innerHTML = '<div class="cfp-sin" style="color:' + (info.color || 'var(--accent)') + '">' + (info.sin || '') + '</div>'
+    + '<div class="cfp-summary">' + (info.summary || '') + '</div>' + pillsHtml;
+  document.querySelectorAll('.ch-card').forEach(function(c) { c.classList.remove('focused'); });
+  var card = document.getElementById('chapter-' + idx);
+  if (card) card.classList.add('focused');
+}
+
+// ── Show character detail ──
+function showCharDetail(name) {
+  var related = characters.filter(function(c) { return c.name === name; });
+  if (!related.length) return;
+  var char = related[0];
+  var arcColors = { 'Developed': '#4ade80', 'Partially Developed': '#facc15', 'Undeveloped': '#f87171' };
+  var col = arcColors[char.arc_status] || '#94a3b8';
+
+  document.getElementById('cm-role').textContent = (char.role || '').toUpperCase();
+  document.getElementById('cm-name').textContent = char.name || '';
+  var chaps = Array.from(new Set(related.map(function(c) { return c.chapter; }).filter(Boolean)));
+  document.getElementById('cm-sub').textContent = [(char.sin || ''), chaps.length ? 'Chapter: ' + chaps.join(', ') : ''].filter(Boolean).join(' · ');
+  var arcEl = document.getElementById('cm-arc');
+  arcEl.textContent = char.arc_status || 'Unknown';
+  arcEl.style.background = col + '22';
+  arcEl.style.color = col;
+  arcEl.style.border = '1px solid ' + col + '44';
+
+  ['cm-verdict-section','cm-emotional-section','cm-sin-section','cm-arc-section',
+   'cm-player-section','cm-pivotal-section','cm-rels-section','cm-weakness-section',
+   'cm-director-section','cm-nova-loading','cm-no-analysis','cm-backstory-section',
+   'cm-note-section'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  var analysis = characterAnalyses[name];
+  if (analysis) {
+    function setField(sectionId, fieldId, value) {
+      if (value) {
+        document.getElementById(sectionId).style.display = 'block';
+        document.getElementById(fieldId).textContent = value;
+      }
+    }
+    setField('cm-verdict-section', 'cm-verdict', analysis.verdict);
+    setField('cm-emotional-section', 'cm-emotional', analysis.emotional_core);
+    setField('cm-sin-section', 'cm-sin-emb', analysis.sin_embodiment);
+    setField('cm-arc-section', 'cm-arc-analysis', analysis.arc_analysis);
+    setField('cm-player-section', 'cm-player', analysis.player_connection);
+    setField('cm-pivotal-section', 'cm-pivotal', analysis.pivotal_moment);
+    setField('cm-rels-section', 'cm-rels', analysis.relationship_web);
+    setField('cm-weakness-section', 'cm-weakness', analysis.weakness);
+    setField('cm-director-section', 'cm-director', analysis.director_note);
+  } else {
+    document.getElementById('cm-no-analysis').style.display = 'block';
+    document.getElementById('cm-note-section').style.display = 'block';
+    var backstory = related.map(function(c) { return c.backstory_summary || ''; }).filter(Boolean).join(' ').trim();
+    if (backstory) {
+      document.getElementById('cm-backstory-section').style.display = 'block';
+      document.getElementById('cm-backstory').textContent = backstory;
+    }
+    var note = related.map(function(c) { return c.emotional_note || ''; }).filter(Boolean).join(' ').trim();
+    document.getElementById('cm-note').textContent = note || 'No analysis available.';
+  }
+  openModal('char-modal');
+}
+
+// ── Show chapter detail ──
+function showChapterDetail(idx) {
+  var info = chapterOverview[String(idx)];
+  if (!info) return;
+  var name = chapterNames[idx] || ('Chapter ' + idx);
+  document.getElementById('chm-sin').textContent = (info.sin || '').toUpperCase();
+  document.getElementById('chm-name').textContent = name;
+  document.getElementById('chm-sub').textContent = (info.chars && info.chars.length)
+    ? info.chars.slice(0, 5).join(' · ') : 'No characters mapped';
+
+  ['chm-verdict-section','chm-sin-section','chm-peak-section','chm-pacing-section',
+   'chm-chars-section','chm-strength-section','chm-gap-section','chm-director-section',
+   'chm-nova-loading','chm-no-analysis'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  var analysis = chapterAnalyses[name];
+  if (analysis) {
+    function setCh(sectionId, fieldId, value) {
+      if (value) {
+        document.getElementById(sectionId).style.display = 'block';
+        document.getElementById(fieldId).textContent = value;
+      }
+    }
+    setCh('chm-verdict-section', 'chm-verdict', analysis.verdict);
+    setCh('chm-sin-section', 'chm-sin-theme', analysis.sin_theme);
+    setCh('chm-peak-section', 'chm-peak', analysis.emotional_peak);
+    setCh('chm-pacing-section', 'chm-pacing', analysis.pacing);
+    setCh('chm-chars-section', 'chm-chars-dyn', analysis.character_dynamics);
+    setCh('chm-strength-section', 'chm-strength', analysis.strongest_element);
+    setCh('chm-gap-section', 'chm-gap', analysis.critical_gap);
+    setCh('chm-director-section', 'chm-director', analysis.director_note);
+  } else {
+    document.getElementById('chm-no-analysis').style.display = 'block';
+    if (info.summary) {
+      document.getElementById('chm-verdict-section').style.display = 'block';
+      document.getElementById('chm-verdict').textContent = info.summary;
+    }
+  }
+  openModal('chapter-modal');
+  document.querySelectorAll('.ch-card').forEach(function(c) { c.classList.remove('focused'); });
+  var card = document.getElementById('chapter-' + idx);
+  if (card) card.classList.add('focused');
+}
+
+// ── Show page content ──
+function showPageContent(name) {
+  var content = pageContent[name];
+  document.getElementById('pm-name').textContent = name;
+  document.getElementById('pm-content').textContent = (content && content.trim()) ? content : 'No content written in this page yet.';
+  openModal('page-modal');
+}
+
+// ── Relationship explorer ──
+function showRelationshipCharacter(name) {
+  var infoBox = document.getElementById('rel-info-box');
+  if (!infoBox) return;
+
+  document.querySelectorAll('.rel-char-item').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.name === name);
+  });
+
+  var meta = characterMeta[name] || {};
+  var roles = (meta.roles && meta.roles.length) ? meta.roles.join(', ') : 'Unknown';
+  var chapters = (meta.chapters && meta.chapters.length) ? meta.chapters.join(', ') : 'Unassigned';
+  var statuses = (meta.statuses && meta.statuses.length) ? meta.statuses.join(', ') : 'Unknown';
+  var rels = relationshipIndex[name] || [];
+  var analysis = characterAnalyses[name] || {};
+  var reasoning = analysis.relationship_web || 'No relationship reasoning generated yet for this character.';
+
+  var linksHtml = '';
+  if (!rels.length) {
+    linksHtml = '<div class="rel-info-empty">No direct links mapped for this character.</div>';
+  } else {
+    linksHtml = '<div class="rel-links">' + rels.map(function(rel) {
+      var directionLabel = rel.direction === 'outgoing' ? 'OUTGOING TO' : 'INCOMING FROM';
+      var other = rel.other || 'Unknown';
+      var detail = rel.reasoning || rel.relationship || 'No relationship details available.';
+      var safeOther = other.replace(/"/g, '&quot;');
+      return '<div class="rel-link-card">'
+        + '<div class="rel-link-top"><span class="rel-dir">' + directionLabel + '</span>'
+        + '<span class="rel-other" data-action="show-char" data-name="' + safeOther + '">' + other + '</span></div>'
+        + '<div class="rel-link-body">' + detail + '</div>'
+        + '</div>';
+    }).join('') + '</div>';
+  }
+
+  infoBox.innerHTML = ''
+    + '<div class="rel-info-head">'
+    + '<div class="rel-info-name">' + name + '</div>'
+    + '<div class="rel-info-meta">Role: ' + roles + '<br/>Chapter: ' + chapters + '<br/>Arc Status: ' + statuses + '</div>'
+    + '</div>'
+    + '<div class="rel-reasoning"><div class="rel-reasoning-label">Narrative Reasoning</div><div class="rel-reasoning-text">' + reasoning + '</div></div>'
+    + linksHtml;
+}
+
+// ── Search ──
+function doSearch(raw) {
+  var q = (raw || '').trim().toLowerCase();
+  var dd = document.getElementById('search-dropdown');
+  if (!q) { dd.style.display = 'none'; dd.innerHTML = ''; return; }
+  var results = [], seen = {};
+  function push(type, label, meta, key) {
+    var k = type + ':' + label;
+    if (seen[k]) return;
+    seen[k] = true;
+    results.push({ type: type, label: label, meta: meta, key: key });
+  }
+  characters.forEach(function(c) {
+    if (((c.name||'')+' '+(c.role||'')+' '+(c.chapter||'')).toLowerCase().indexOf(q) !== -1)
+      push('character', c.name||'', (c.role||'')+(c.chapter?' · '+c.chapter:''), c.name||'');
+  });
+  chapterNames.forEach(function(ch) {
+    if (ch.toLowerCase().indexOf(q) !== -1)
+      push('chapter', ch, 'Chapter', chapterIndexMap[ch]||'0');
+  });
+  Object.keys(pageContent).forEach(function(name) {
+    if (name.toLowerCase().indexOf(q) !== -1)
+      push('page', name, 'Doc', name);
+  });
+  results = results.slice(0, 18);
+  if (!results.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = results.map(function(r) {
+    var safeKey = r.key.replace(/"/g, '&quot;');
+    return '<div class="search-item" data-action="search-pick" data-type="' + r.type + '" data-key="' + safeKey + '">'
+      + '<div class="search-item-label">' + r.label + '</div>'
+      + '<div class="search-item-meta">' + r.meta + '</div></div>';
+  }).join('');
+  dd.style.display = 'block';
+}
+
+// ── Render Master Timeline ──
+(function renderTimeline() {
+  var container = document.getElementById('tl-master');
+  if (!container) return;
+  var events = (timelineData && timelineData.timeline) || [];
+  if (!events.length) {
+    container.innerHTML = '<div style="color:var(--dim);font-style:italic;padding:20px 0">No timeline generated — re-run to produce timeline analysis.</div>';
+    return;
+  }
+
+  var typeClass = { 'main': 'tl-ev-main', 'sideplot': 'tl-ev-sideplot', 'trauma': 'tl-ev-trauma', 'flashback': 'tl-ev-flashback', 'offscreen': 'tl-ev-offscreen' };
+  var typeLabel = { 'main': 'MAIN', 'sideplot': 'SIDE', 'trauma': 'TRAUMA', 'flashback': 'FLASH', 'offscreen': 'OFF' };
+  var typeBadge = { 'main': 'tl-main', 'sideplot': 'tl-sideplot', 'trauma': 'tl-trauma', 'flashback': 'tl-flashback', 'offscreen': 'tl-offscreen' };
+  var weightClass = { 'critical': 'tl-ev-critical', 'high': 'tl-ev-high', 'medium': '', 'low': '' };
+
+  var html = '';
+  var lastEra = null;
+
+  events.forEach(function(ev) {
+    var era = ev.era || 'present';
+    if (era !== lastEra) {
+      var eraLabel = era === 'past' ? '◀ BEFORE THE STORY' : '▶ PRESENT — MAIN STORY';
+      var eraColor = era === 'past' ? 'var(--dim)' : 'var(--accent)';
+      html += '<div class="tl-era-divider"><span class="tl-era-label" style="color:' + eraColor + '">' + eraLabel + '</span><div class="tl-era-line"></div></div>';
+      lastEra = era;
+    }
+
+    var tc = typeClass[ev.type] || 'tl-ev-main';
+    var wc = weightClass[ev.emotional_weight] || '';
+    var tb = typeBadge[ev.type] || 'tl-main';
+    var tl = typeLabel[ev.type] || 'MAIN';
+
+    var charsHtml = '';
+    if (ev.characters && ev.characters.length) {
+      charsHtml = '<div class="tl-event-chars">';
+      ev.characters.forEach(function(name) {
+        charsHtml += '<span class="tl-char-tag" data-action="show-char" data-name="' + name.replace(/"/g, '&quot;') + '">' + name + '</span>';
+      });
+      charsHtml += '</div>';
+    }
+
+    var chapterSafe = (ev.chapter || '').replace(/"/g, '&quot;');
+    var chapterIdx = chapterIndexMap[ev.chapter];
+    var chapterAttr = (chapterIdx !== undefined) ? ' data-action="show-chapter" data-idx="' + chapterIdx + '"' : '';
+
+    html += '<div class="tl-event ' + tc + ' ' + wc + '"' + chapterAttr + '>'
+      + '<div class="tl-event-header">'
+      + '<div class="tl-event-title">' + (ev.title || '') + '</div>'
+      + '<div class="tl-event-badges">'
+      + '<span class="tl-type-badge ' + tb + '">' + tl + '</span>'
+      + (ev.chapter ? '<span class="tl-chapter-badge">' + ev.chapter + '</span>' : '')
+      + '</div></div>'
+      + '<div class="tl-event-desc">' + (ev.description || '') + '</div>'
+      + charsHtml
+      + '</div>';
+  });
+
+  container.innerHTML = html;
+  document.getElementById('tl-loading') && document.getElementById('tl-loading').remove();
+})();
+
+(function initRelationshipExplorer() {
+  var first = document.querySelector('.rel-char-item');
+  if (first) showRelationshipCharacter(first.dataset.name);
+})();
+
+// ── Single delegated click handler ──
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('[data-action]');
+  var dd = document.getElementById('search-dropdown');
+  var inp = document.getElementById('search-input');
+
+  // Close search dropdown on outside click
+  if (inp && dd && !inp.contains(e.target) && !dd.contains(e.target)) {
+    dd.style.display = 'none';
+  }
+
+  if (!el) return;
+  var action = el.dataset.action;
+
+  if (action === 'show-char') {
+    e.stopPropagation();
+    showCharDetail(el.dataset.name);
+  } else if (action === 'show-chapter') {
+    showChapterDetail(parseInt(el.dataset.idx, 10));
+  } else if (action === 'show-page') {
+    e.stopPropagation();
+    showPageContent(el.dataset.name);
+  } else if (action === 'select-chapter') {
+    selectChapter(parseInt(el.dataset.idx, 10));
+  } else if (action === 'rel-char-select') {
+    showRelationshipCharacter(el.dataset.name);
+  } else if (action === 'close-modal') {
+    // Only close if clicking the backdrop itself (not content inside) or the close button
+    var isBackdrop = el.classList.contains('modal-backdrop');
+    var isCloseBtn = el.classList.contains('modal-close');
+    if (isBackdrop && e.target !== el) return;
+    closeModal(el.dataset.modal);
+  } else if (action === 'search-pick') {
+    dd.style.display = 'none';
+    inp.value = '';
+    var type = el.dataset.type, key = el.dataset.key;
+    if (type === 'character') showCharDetail(key);
+    else if (type === 'chapter') { selectChapter(parseInt(key, 10)); }
+    else if (type === 'page') showPageContent(key);
+  } else if (el.dataset.section) {
+    scrollToSection(el.dataset.section);
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-backdrop.open').forEach(function(m) { m.classList.remove('open'); });
+    document.getElementById('search-dropdown').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
