@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Story Audit</title>
+<style>
+body {
+    margin: 0;
+    font-family: Inter, Arial, sans-serif;
+    background: #0f1117;
+    color: #e6e6e6;
+    display: flex;
+}
+
+.sidebar {
+    width: 220px;
+    background: #161a23;
+    padding: 30px 20px;
+}
+
+.sidebar h2 {
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.sidebar div {
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #aaa;
+}
+
+.main {
+    flex: 1;
+    padding: 40px;
+}
+
+.section {
+    margin-bottom: 40px;
+}
+
+.section h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+.card {
+    background: #1c212c;
+    padding: 20px;
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
+.chapter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.chapter-card {
+    background: #1c212c;
+    padding: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.chapter-card:hover {
+    background: #252b38;
+}
+
+.chapter-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.chapter-preview {
+    font-size: 12px;
+    color: #888;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #1c212c;
+    padding: 30px;
+    border-radius: 12px;
+    width: 500px;
+}
+
+button {
+    margin-top: 20px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background: #4f7cff;
+    color: white;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Story Audit</h2>
+    <div>Overview</div>
+    <div>Structure</div>
+    <div>Characters</div>
+    <div>Chapters</div>
+    <div>Improvements</div>
+</div>
+
+<div class="main">
+
+<div class="section">
+<h2>Project Health</h2>
+<div class="card">The project is in its early stages with several components partially completed and others not yet started. There is potential for a rich narrative, but more effort is needed to bring the project to a complete and polished state.</div>
+</div>
+
+<div class="section">
+<h2>Structural Analysis</h2>
+<div class="card">The story appears to be thematically centered around the seven deadly sins, with characters and storylines being developed around each sin. However, the structural organization is currently disjointed, with some character designs and storyline progressions started but many components lacking any work.</div>
+</div>
+
+<div class="section">
+<h2>Character Consistency</h2>
+<div class="card">Character design for some characters such as Sarah Daniels, Alan (Pride), and Wrath (Edward Daniels) has been partially completed, which is a good start. However, other characters and sins have not been touched, leading to potential inconsistencies in character development and story integration.</div>
+</div>
+
+<div class="section">
+<h2>Chapters</h2>
+<div class="chapter-grid">
+
+        <div class="chapter-card" onclick="openModal(0)">
+            <div class="chapter-title">Story Outline 0.1</div>
+            <div class="chapter-preview">Click to view analysis</div>
+        </div>
+        
+        <div class="chapter-card" onclick="openModal(1)">
+            <div class="chapter-title">Chapters Outline 0.1</div>
+            <div class="chapter-preview">Click to view analysis</div>
+        </div>
+        
+</div>
+</div>
+
+<div class="section">
+<h2>Improvement Plan</h2>
+<div class="card">1. Prioritize the completion of character designs for all characters, especially those related to the seven deadly sins that have not yet been started.
+2. Develop a detailed story outline to ensure all components are cohesively connected.
+3. Begin working on the chapters outline to provide a clear roadmap for the narrative.
+4. Ensure that storyline progressions for each sin are started and developed to maintain consistency and depth in the narrative.
+5. Regularly review and revise partially completed work to refine the story and character details.</div>
+</div>
+
+</div>
+
+
+        <div class="modal" id="modal-0">
+            <div class="modal-content">
+                <h2>Story Outline 0.1</h2>
+                <p>This chapter is partially completed, indicating that the foundational structure of the story is being laid out. However, more work is needed to flesh out the details and ensure a cohesive narrative flow.</p>
+                <button onclick="closeModal(0)">Close</button>
+            </div>
+        </div>
+        
+        <div class="modal" id="modal-1">
+            <div class="modal-content">
+                <h2>Chapters Outline 0.1</h2>
+                <p>This chapter is just starting, which means the detailed breakdown of the story into chapters is yet to be developed. This is a critical step that needs to be completed to guide the writing and ensure the story progresses logically.</p>
+                <button onclick="closeModal(1)">Close</button>
+            </div>
+        </div>
+        
+
+<script>
+function openModal(id) {
+    document.getElementById("modal-" + id).style.display = "flex";
+}
+
+function closeModal(id) {
+    document.getElementById("modal-" + id).style.display = "none";
+}
+</script>
+
+</body>
+</html>
